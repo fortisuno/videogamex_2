@@ -1,5 +1,3 @@
-import { set } from 'lodash'
-import Link from 'next/link'
 import React, { useContext, useEffect } from 'react'
 import { Card, Button } from 'react-bootstrap'
 import CarritoContext from './Carrito'
