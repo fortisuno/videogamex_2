@@ -2,7 +2,6 @@ import React from 'react'
 import { InputGroup, Button, FormControl, Form, Row, Col } from 'react-bootstrap'
 import Productos from './Productos'
 import {appData} from '../utils/appData'
-import Text from './Text'
 
 const ContainerProductos = () => {
   return (
