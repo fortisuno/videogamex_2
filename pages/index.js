@@ -1,35 +1,121 @@
-import ContainerProductos from '../components/ProductosContainer';
-import Productos from '../components/Productos';
-import VentaContainer from '../components/VentaContainer';
-import ContentLayout from '../layouts/ContentLayout'
-import { useState } from 'react';
-import CarritoContext from '../components/Carrito'
+import { Box, Button, Container, Divider, FormControl, Grid, IconButton, InputAdornment, InputLabel, List, ListItem, ListItemText, OutlinedInput, Stack, TextField, Typography } from "@mui/material";
+import { createContext, useCallback, useEffect, useState } from "react";
+import DefaultLayout from "../components/DefaultLayout";
+import Navbar from "../components/Navbar";
+import ProductosContainer from "../components/ProductosContainer";
+import VentaLayout from "../components/VentaLayout";
+import { appData } from "../utils/data";
+import DeleteIcon from '@mui/icons-material/Delete';
+import AddIcon from '@mui/icons-material/Add';
+import CarritoItem from "../components/CarritoItem";
+import { CarritoContext } from "../components/Carrito";
+import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
+import CloseIcon from '@mui/icons-material/Close';
 
 export async function getStaticProps(ctx) {
 
-  return {
-    props: {
-      data: {
-        title: 'Inicio',
-        admin: false
-      }
-    }, // will be passed to the page component as props
-  }
+	return {
+		props: {
+			data: {
+			title: 'Inicio',
+			admin: false
+			}
+		}, // will be passed to the page component as props
+	}
 }
 
-export default function Home({data}) {
 
-  const [carrito, setCarrito] = useState([]);
 
-  return (
-    <div className='d-flex h-100 py-5 gap-5 align-items-start'>
-      <CarritoContext.Provider value={{carrito, setCarrito}}>
-          <ContainerProductos/>
-          <div className="vr my-auto" style={{height: '90%'}}/>
-          <VentaContainer/>
-      </CarritoContext.Provider>
-    </div>
-  )
+export default function Home() {
+	const [productos, setProductos] = useState([])
+	const [carrito, setCarrito] = useState([])
+	const [total, setTotal] = useState(0)
+	const [pago, setPago] = useState(0)
+	const [cambio, setCambio] = useState(0)
+
+	const loadProductos = useCallback((p) => setProductos(p), [setProductos])
+	const updateTotal = useCallback((t) => setTotal(t), [setTotal])
+	const updateCambio = useCallback((c) => setCambio(c), [setCambio])
+	const resetPago = useCallback(() => setPago(0), [setPago])
+
+	useEffect(() => {
+		loadProductos(appData.productos)
+	}, [loadProductos])
+
+	useEffect(() => {
+		let compra = 0;
+		for(let producto of carrito) {
+			compra += (producto.precio * producto.cantidad)
+		}
+		updateTotal(compra)
+	}, [carrito, updateTotal])
+
+	useEffect(() => {
+		if(!(total > 0)) {
+			resetPago()
+		}
+	}, [total])
+
+	useEffect(() => {
+		if(pago > total) {
+			updateCambio(pago - total)
+		} else {
+			updateCambio(0)
+		}
+	}, [pago, total])
+
+	return (
+		<CarritoContext.Provider value={{carrito, setCarrito}}>
+			<Stack direction="row" sx={{height:'100%'}} divider={<Divider orientation="vertical" flexItem  />} py={5} spacing={4}>
+				<Box flexGrow={1}>
+					<ProductosContainer rows={productos}/>
+				</Box>
+				<Box width={400}>
+					<Box position={"sticky"} sx={{width:"100%", height: "80vh", top: 104}}>
+						<Typography variant="h4" gutterBottom>
+						Punto de venta
+						</Typography>
+						<List>
+						{
+							carrito.map((p, idx) => <CarritoItem key={idx} data={p} />)
+						}              
+						</List>
+						<Box position={"absolute"} bottom={0}>
+							<Stack spacing={3}>
+								<TextField 
+									variant="outlined"
+									size="small"
+									label="Pago del cliente"
+									disabled={total > 0 ? false : true}
+									value={pago}
+									onChange={({target}) => setPago(target.value)}
+									sx={{textAlign: "rigth"}}
+									placeholder="0"
+									InputProps={{
+										startAdornment: <InputAdornment position="start">$</InputAdornment>,
+										endAdornment: <InputAdornment position="end">.00</InputAdornment>
+									}}/>
+								<Stack spacing={1}>
+									<Box display="flex">
+										<Typography flexGrow={1} variant="body2">Total a pagar:</Typography>
+										<Typography variant="body2">${total.toFixed(2)}</Typography>
+									</Box>
+									<Box display="flex">
+										<Typography flexGrow={1} variant="body2">Cambio:</Typography>
+										<Typography variant="body2">${cambio.toFixed(2)}</Typography>
+									</Box>
+								</Stack>
+								<Stack spacing={1}>
+									<Button variant="contained" startIcon={<AttachMoneyIcon/>}>Pagar</Button>
+									<Button variant="contained" color="error" startIcon={<CloseIcon/>} onClick={() => setCarrito([])}>Cancelar</Button>
+								</Stack>
+							</Stack>
+						</Box>
+					</Box>
+				</Box>
+			</Stack>
+		</CarritoContext.Provider>
+	)
 }
 
-Home.getLayout = ContentLayout.getLayout;
+Home.getLayout = VentaLayout.getLayout

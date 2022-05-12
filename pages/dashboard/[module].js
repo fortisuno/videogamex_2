@@ -1,20 +1,15 @@
-import { useRouter } from 'next/router'
-import React, { useEffect, useState } from 'react'
-import TableProductos from '../../components/TableProductos';
-import DashboardLayout from '../../layouts/DashboardLayout';
-import {appData} from '../../utils/appData';
+import React, { useCallback, useEffect, useState } from 'react'
+import DashboardLayout from '../../components/DashboardLayout';
+import { appData } from '../../utils/data';
+import ProductosTable from '../../components/ProductosTable';
+import CategoriasTable from '../../components/CategoriasTable';
+import UsuariosTable from '../../components/UsuariosTable';
 
 export async function getStaticProps({params}) {
-
-	const page = appData.pages.find((info) => info.slug === params.module)
-
 	return {
 		props: {
 			data: {
-				title: page.title,
-				admin: true,
-				slug: params.module,
-				path: '/dashboard/' + params.module
+				slug:[ params.module],
 			}
 		},
 	}
@@ -26,52 +21,45 @@ export async function getStaticPaths() {
 			{ params: { module: 'productos' } },
 			{ params: { module: 'categorias' } },
 			{ params: { module: 'usuarios' } },
+			{ params: { module: 'historial_de_ventas' } },
+			{ params: { module: 'resumen_de_ingresos' } },
 		],
 		fallback: false
 	};
 }
 
 const Module = ({data}) => {
+	const [tableData, setTableData] = useState({
+		rows: [],
+		loading: true
+	})
 
-	const [table, setTable] = useState([])
+	const loadTableData = useCallback((td) => {
+		setTableData(td)
+	}, [setTableData])
 
 	useEffect(() => {
-		let keys = [];
-		let items = [];
-		
-		switch(data.slug) {
-			case 'usuarios':
-				items = [
-					['Alias', 'Nombre completo', 'RFC'],
-					...appData.usuarios.map((item) => [ item.alias, item.nombre + ' ' + item.apellidoPaterno + ' ' + item.apellidoMaterno, item.rfc])
-				]
-				break;
-			case 'categorias':
-				items = [
-					['Slug', 'Titulo',],
-					...appData.categorias.map((item) => [ item.slug, item.title])
-				]
-				break;
-			default:
-				items = [
-					['Slug', 'Titulo', 'Categoría'],
-					...appData.productos.map((item) => [ item.slug, item.titulo, item.categoria ])
-				]
-				break;
-		}
 
-		setTable(items)
-	}, [data])
+		loadTableData({rows: appData[data.slug[0]], loading: false})
 
-	if(table.length > 0) {
-		return <TableProductos items={table}/>
-	}
+	}, [data, loadTableData])
 
 	return (
-		<div className='py-5 text-center'>
-			<h2 className='display-4 mt-5'>No se encontraron registros</h2>
-		</div>
+		<ContentSwitch slug={data.slug[0]} data={tableData}/>
 	)
+}
+
+const ContentSwitch = ({slug, data}) => {
+	switch(slug) {
+		case 'productos':
+			return <ProductosTable {...data}/>
+		case 'categorias':
+			return <CategoriasTable {...data}/>
+		case 'usuarios':
+			return <UsuariosTable {...data}/>
+		default:
+			return <span>No disponible</span>
+	}
 }
 
 Module.getLayout = DashboardLayout.getLayout

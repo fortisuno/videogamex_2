@@ -1,22 +1,22 @@
-import { createContext } from 'react'
-import { SSRProvider } from 'react-bootstrap';
+import { CacheProvider } from "@emotion/react"
+import { CssBaseline, ThemeProvider } from "@mui/material"
+import { createEmotionCache, theme } from "../utils/config"
 
-import '../styles/globals.scss'
+const clientSideEmotionCache = createEmotionCache();
 
-export const AppContext = createContext();
-
-function MyApp({ Component, pageProps }) {
-
-  const getLayout = Component.getLayout || ((page) => page)
-
+function MyApp({ Component, emotionCache = clientSideEmotionCache, pageProps }) {
   return (
-    <SSRProvider>
-      {
-        Component.getLayout
-          ? Component.getLayout(pageProps.data, <Component {...pageProps} />)
-          : <Component {...pageProps} />
-      }
-    </SSRProvider>
+    <CacheProvider value={emotionCache}>
+      <ThemeProvider theme={theme}>
+        {/* CssBaseline kickstart an elegant, consistent, and simple baseline to build upon. */}
+        <CssBaseline />
+        {
+          Component.getLayout
+            ? Component.getLayout(pageProps.data, <Component {...pageProps} />)
+            : <Component {...pageProps} />
+        }
+      </ThemeProvider>
+    </CacheProvider>
   )
 }
 
