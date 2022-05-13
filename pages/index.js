@@ -15,6 +15,7 @@ import UsuariosDialog from '../components/UsuariosDialog'
 import { useDialog } from "../hooks/useDialog";
 import { SessionContext } from "../components/Session";
 import DialogContainer from "../components/DialogContainer";
+import axios from "axios";
 
 export async function getStaticProps(ctx) {
 
@@ -43,7 +44,16 @@ export default function Home() {
 	const resetPago = useCallback(() => setPago(0), [setPago])
 
 	useEffect(() => {
-		loadProductos(appData.productos)
+		const fetchData = async () => {
+			try {
+				const {data} = await axios.get('/api/productos')
+				loadProductos(data.entities)
+			} catch (error) {
+				console.log("error", error)
+			}
+		}
+
+		fetchData()
 	}, [loadProductos])
 
 	useEffect(() => {

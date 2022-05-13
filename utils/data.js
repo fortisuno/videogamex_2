@@ -12,7 +12,7 @@ export const appData = {
 		 slug: 'halo',
 		 titulo: 'Halo Reach',
 		 desarrolladora: 'Bungie',
-		 categoria: 'accion',
+		 categoria: 'disparos',
 		 stock: 10,
 		 imagen: 'https://gameplanet-53f8.kxcdn.com/media/catalog/product/cache/4/small_image/228x/9df78eab33525d08d6e5fb8d27136e95/h/a/halo-reach_1.jpg',
 		 precio: 19.99
@@ -41,9 +41,13 @@ export const appData = {
  
 	categorias: [
 	  {
-		 slug: 'accion',
-		 titulo: 'Acción'
+		 slug: 'disparos',
+		 titulo: 'Disparos'
 	  },
+	  {
+		slug: 'accion',
+		titulo: 'Acción'
+	 },
 	  {
 		 slug: 'carreras',
 		 titulo: 'Carreras'

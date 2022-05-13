@@ -1,9 +1,11 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import DashboardLayout from '../../components/DashboardLayout';
-import { appData } from '../../utils/data';
 import TableProductos from '../../components/TableProductos';
 import TableCategorias from '../../components/TableCategorias';
 import TableUsuarios from '../../components/TableUsuarios';
+import { db } from '../../utils/firebase';
+import axios from 'axios';
+import { collection, getDoc, getDocs } from 'firebase/firestore';
 
 export async function getStaticProps({params}) {
 	return {
@@ -39,10 +41,19 @@ const Module = ({data}) => {
 	}, [setTableData])
 
 	useEffect(() => {
+		const fetchData = async () => {
+			try {
+				const res = await axios.get('/api/'+data.slug[0])
+				loadTableData({loading: false, rows: res.data.entities})
+			} catch (error) {
+				console.log("error", error)
+				loadTableData({loading: false, rows: []})
+			}
+		}
 
-		loadTableData({rows: appData[data.slug[0]], loading: false})
+		fetchData()
 
-	}, [data, loadTableData])
+	}, [loadTableData, data])
 
 	return (
 		<ContentSwitch slug={data.slug[0]} data={tableData}/>

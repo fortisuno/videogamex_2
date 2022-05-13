@@ -21,7 +21,7 @@ const settings = ['Ver cuenta', 'Cerrar sesión'];
 const Navbar = ({dashboard}) => {
 	const [anchorElUser, setAnchorElUser] = React.useState(null);
 	const {openDialog} = useContext(DialogContext)
-	const {data} = useContext(SessionContext)
+	const {usuario} = useContext(SessionContext)
 
 	const handleOpenUserMenu = (event) => {
 		setAnchorElUser(event.currentTarget);
@@ -63,7 +63,7 @@ const Navbar = ({dashboard}) => {
 
 					<Box flexGrow={1} display="flex" justifyContent="right" gap={5}>
 						{
-							!!data.usuario && data.usuario.tipo === 'admin' && (
+							!!usuario && usuario.tipo === 'admin' && (
 								<Button
 									variant="outlined"
 									color={dashboard ? "inherit" : "primary"}

@@ -9,7 +9,7 @@ import ProductoForm from './ProductoForm';
 
 const ProductosSearch = ({handleFilter, handleReset, checkpoint, withAddButton = true}) => {
 	const {openDialog} = useContext(DialogContext)
-	const {data: {categorias}} = useContext(SessionContext)
+	const {categorias} = useContext(SessionContext)
 	const [filter, setFilter] = useState({
 		titulo: '',
 		categoria: 'todas'

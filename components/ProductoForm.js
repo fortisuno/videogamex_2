@@ -1,20 +1,30 @@
 import { FormControl, Grid, InputAdornment, InputLabel, MenuItem, Select, TextField } from '@mui/material'
 import { useFormik } from 'formik'
+import { withRouter } from 'next/router'
 import React, { useContext } from 'react'
 import { getSlug } from '../utils/functions'
 import { DialogContext } from './DialogContainer'
 import FormView from './FormView'
 import ProductoDetalle from './ProductoDetalle'
 
-const ProductoForm = ({checkOnSave}) => {
+const ProductoForm = ({checkOnSave, router}) => {
 
-	const {data} = useContext(DialogContext)
+	const {data, closeDialog} = useContext(DialogContext)
   
 	const {handleSubmit, values, handleChange} = useFormik({
 		initialValues: data,
-		onSubmit: (e) => {
-			const producto = {...values, slug: getSlug(values.titulo)}
-			console.log(producto)
+		onSubmit: async () => {
+			try {
+				const productoAgregado = await db
+					.collection("usuarios")
+					.doc(session.uid)
+					.add({...values, slug: getSlug(values.titulo)});
+				closeDialog();
+				router.reload()
+			} catch (error) {
+				closeDialog();
+				console.log(error);
+			}
 		}
 	})
 
@@ -60,4 +70,4 @@ const ProductoForm = ({checkOnSave}) => {
 	)
 }
 
-export default ProductoForm
+export default withRouter(ProductoForm)
