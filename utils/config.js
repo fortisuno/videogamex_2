@@ -7,13 +7,13 @@ export const createEmotionCache = () => createCache({ key: 'css', prepend: true 
 export const theme = createTheme({
 	palette: {
 		primary: {
-			main: '#1976D2',
+			main: '#2196f3',
 		},
 		secondary: {
 			main: '#ffffff',
 		},
 		error: {
-			main: red.A400,
+			main: "#f44336",
 		},
 	},
 });

@@ -1,11 +1,16 @@
 import { Grid, Stack, Typography, Box } from '@mui/material'
-import React from 'react'
+import React, { useContext } from 'react'
 import DetalleView from './DetalleView'
+import { DialogContext } from './DialogContainer'
 import NoImage from './NoImage'
+import ProductoForm from './ProductoForm'
 
-const ProductoDetalle = ({data, dialogActions}) => {
+const ProductoDetalle = () => {
+	
+	const {data} = useContext(DialogContext)
+
   	return (
-		<DetalleView {...dialogActions}>
+		<DetalleView editableView={<ProductoForm checkOnSave={true}/>} title="Editar producto">
 			<Grid item xs>
 				{
 					data.imagen
@@ -20,7 +25,7 @@ const ProductoDetalle = ({data, dialogActions}) => {
 						<Typography variant="overline" gutterBottom>{data.titulo}</Typography>
 					</Box>
 					<Box display={"grid"} gridTemplateColumns="40% 1fr">
-						<Typography variant="overline" gutterBottom><b>Dev:</b></Typography>
+						<Typography variant="overline" gutterBottom><b>Desarrolladora:</b></Typography>
 						<Typography variant="overline" gutterBottom>{data.desarrolladora}</Typography>
 					</Box>
 					<Box display={"grid"} gridTemplateColumns="40% 1fr">

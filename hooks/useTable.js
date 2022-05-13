@@ -1,15 +1,15 @@
 import { useCallback, useEffect, useState } from "react"
 
-export const useTable = (rows) => {
-	const [filteredRows, setFilteredRows] = useState([])
+export const useTable = (data) => {
+	const [rows, setRows] = useState([])
 	const [page, setPage] = useState(0);
 	const [rowsPerPage, setRowsPerPage] = useState(5);
 
-	const initTable = useCallback((fr) => setFilteredRows(fr), [setFilteredRows])
+	const initTable = useCallback((r) => setRows(r), [setRows])
 
 	useEffect(() => {
-		initTable(rows)
-	}, [rows, initTable])
+		initTable(data)
+	}, [data, initTable])
 
 	const handleChangePage = useCallback((event, newPage) => {
 		setPage(newPage);
@@ -21,17 +21,18 @@ export const useTable = (rows) => {
 	}, [setPage, setRowsPerPage]);
 
 	const filterRows = useCallback((filtered) => {
-		setFilteredRows(filtered)
+		setRows(filtered)
 		setPage(0)
-	}, [setFilteredRows])
+	}, [setRows])
 
 	return {
-		filteredRows, 
+		rows, 
 		filterRows,
-		config: {
+		pagination: {
 			page,
 			rowsPerPage,
 			handleChangePage,
 			handleChangeRowsPerPage
-	}}
+		}
+	}
 }

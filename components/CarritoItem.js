@@ -24,27 +24,30 @@ const CarritoItem = ({data}) => {
 	return (
 		<ListItem
 			disableGutters
+			
 			secondaryAction={
 				<Box edge="end" display={"flex"} gap={5}>
-					<TextField
-						sx={{width: 75}}
-						type={"number"}
-						size="small"
-						value={data.cantidad}
-						onChange={updateItem}
-						InputProps={{
-							inputProps: {min: 1}
-						}}
-					/>
+					
 					<IconButton color="error" aria-label="delete" onClick={removeItem}>
 						<DeleteIcon />
 					</IconButton>
+					
 				</Box>
 			}
 		>
 			<ListItemText
 				primary={data.titulo}
 				secondary={`$${data.precio.toFixed(2)}`}
+			/>
+			<TextField
+				sx={{width: 75}}
+				type={"number"}
+				size="small"
+				value={data.cantidad}
+				onChange={updateItem}
+				InputProps={{
+					inputProps: {min: 1}
+				}}
 			/>
 		</ListItem>
 	)

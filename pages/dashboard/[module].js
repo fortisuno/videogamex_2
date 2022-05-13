@@ -1,9 +1,9 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import DashboardLayout from '../../components/DashboardLayout';
 import { appData } from '../../utils/data';
-import ProductosTable from '../../components/ProductosTable';
-import CategoriasTable from '../../components/CategoriasTable';
-import UsuariosTable from '../../components/UsuariosTable';
+import TableProductos from '../../components/TableProductos';
+import TableCategorias from '../../components/TableCategorias';
+import TableUsuarios from '../../components/TableUsuarios';
 
 export async function getStaticProps({params}) {
 	return {
@@ -52,11 +52,11 @@ const Module = ({data}) => {
 const ContentSwitch = ({slug, data}) => {
 	switch(slug) {
 		case 'productos':
-			return <ProductosTable {...data}/>
+			return <TableProductos {...data}/>
 		case 'categorias':
-			return <CategoriasTable {...data}/>
+			return <TableCategorias {...data}/>
 		case 'usuarios':
-			return <UsuariosTable {...data}/>
+			return <TableUsuarios {...data}/>
 		default:
 			return <span>No disponible</span>
 	}

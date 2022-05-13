@@ -1,36 +1,27 @@
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useCallback, useContext, useEffect, useState } from 'react'
 import { Box, Button, FormControl, Grid, IconButton, InputAdornment, InputLabel, MenuItem, OutlinedInput, Select, Stack, Tooltip } from '@mui/material'
 import SearchIcon from '@mui/icons-material/Search';
 import AddIcon from '@mui/icons-material/Add';
 import { appData } from '../utils/data';
+import { SessionContext } from './Session';
+import { DialogContext } from './DialogContainer';
+import ProductoForm from './ProductoForm';
 
-const ProductosSearch = ({handleOpened, handleData, base, withAddButton = true}) => {
-	const [categorias, setCategorias] = useState([])
+const ProductosSearch = ({handleFilter, handleReset, checkpoint, withAddButton = true}) => {
+	const {openDialog} = useContext(DialogContext)
+	const {data: {categorias}} = useContext(SessionContext)
 	const [filter, setFilter] = useState({
 		titulo: '',
 		categoria: 'todas'
 	})
 
-	const loadCategorias = useCallback((c) => setCategorias(c), [setCategorias])
-
-	useEffect(() => {
-		loadCategorias(appData.categorias)
-	}, [loadCategorias])
-
-	const handleFilter = ({target}) => {
-		setFilter({
-			...filter,
-			[target.name]: target.value
-		})
-	}
-
-	const filterRows = () => {
+	const filterData = () => {
 		const {titulo, categoria} = filter
 		
 		if(titulo.length === 0 && categoria === 'todas') {
-			handleData(base)
+			handleReset()
 		} else {
-			let filtered = base
+			let filtered = checkpoint
 			
 			if(titulo.length > 0) {
 				filtered = filtered.filter(item => item.titulo.includes(titulo))
@@ -40,20 +31,24 @@ const ProductosSearch = ({handleOpened, handleData, base, withAddButton = true})
 				filtered = filtered.filter(item => item.categoria === categoria)
 			}
 
-			handleData(filtered)
+			handleFilter(filtered)
 		}
 	}
 
 	const handleOpenDialog = () => {
-		handleOpened({
-			slug: '',
-			titulo: '',
-			desarrolladora: '',
-			categoria: 'accion',
-			imagen: '',
-			stock: 1,
-			precio: (0).toFixed(2)
-		}, 'agregar');
+		openDialog({
+			title: 'Agregar producto',
+			data: {
+				slug: '',
+				titulo: '',
+				desarrolladora: '',
+				categoria: 'accion',
+				imagen: '',
+				stock: 1,
+				precio: (0).toFixed(2)
+			},
+			view: <ProductoForm/>
+		});
 	}
 
 	return (
@@ -67,11 +62,11 @@ const ProductosSearch = ({handleOpened, handleData, base, withAddButton = true})
 						name="titulo"
 						placeholder={"Buscar por titulo"}
 						value={filter.titulo}
-						onChange={handleFilter}
+						onChange={({target}) => setFilter({...filter, [target.name]: target.value})}
 						endAdornment={
 						<InputAdornment position="end">
 							<Tooltip title="Buscar">
-								<IconButton edge="end" onClick={filterRows}>
+								<IconButton edge="end" onClick={filterData}>
 									<SearchIcon/>
 								</IconButton>
 							</Tooltip>
@@ -89,7 +84,7 @@ const ProductosSearch = ({handleOpened, handleData, base, withAddButton = true})
 						id="demo-simple-select"
 						value={filter.categoria}
 						name="categoria"
-						onChange={handleFilter}
+						onChange={({target}) => setFilter({...filter, [target.name]: target.value})}
 						label="Categoría"
 						disabled={categorias.length > 0 ? false : true}
 					>

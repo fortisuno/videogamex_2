@@ -1,10 +1,14 @@
 import { FormControl, Grid, InputAdornment, InputLabel, MenuItem, Select, TextField } from '@mui/material'
 import { useFormik } from 'formik'
-import React from 'react'
+import React, { useContext } from 'react'
 import { getSlug } from '../utils/functions'
+import { DialogContext } from './DialogContainer'
 import FormView from './FormView'
+import ProductoDetalle from './ProductoDetalle'
 
-const ProductoForm = ({data, dialogActions}) => {
+const ProductoForm = ({checkOnSave}) => {
+
+	const {data} = useContext(DialogContext)
   
 	const {handleSubmit, values, handleChange} = useFormik({
 		initialValues: data,
@@ -14,10 +18,10 @@ const ProductoForm = ({data, dialogActions}) => {
 		}
 	})
 
-	const {titulo, desarrolladora, categoria, imagen, stock, precio} = values
+	const {titulo, desarrolladora, categoria, imagen, stock, precio, fechaLanzamiento} = values
 
 	return (
-		<FormView onSubmit={handleSubmit} {...dialogActions}>
+		<FormView detailView={<ProductoDetalle/>} title="Ver producto" handleSubmit={handleSubmit} checkOnSave={checkOnSave}>
 			<Grid item xs={12}>
 				<TextField fullWidth name='titulo' label="Titulo" value={titulo} variant="outlined" onChange={handleChange} />
 			</Grid>

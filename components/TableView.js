@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { createContext, useCallback, useContext, useEffect, useState } from 'react'
 import Box from '@mui/material/Box';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
@@ -10,21 +10,24 @@ import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { Button, CircularProgress, IconButton, Toolbar, Tooltip, Typography } from '@mui/material';
-import ProductoDialog from './ProductoDialog';
+import { DialogContext } from './DialogContainer';
+import ProductoDetalle from './ProductoDetalle';
+import { useTable } from '../hooks/useTable';
+import { useFilteredData } from '../hooks/useFilteredData';
+import { withRouter } from 'next/router';
 
-export default function TableView({
-	loading,
-	rows = [],
-	headCells,
-	handleOpen,
-	page,
-	rowsPerPage,
-	handleChangePage,
-	handleChangeRowsPerPage,
-	editable = true,
-	children}) {
+const TableView = ({ loading, items, pagedItems, pagination, headCells, showDetails = true, children, router, detailView }) => {
+	const {openDialog} = useContext(DialogContext);
 
-  	const emptyRows = page > 0 ? Math.max(0, (1 + page) * rowsPerPage - rows.length) : 0;
+	const handleOpenDialog = (producto) => {
+		openDialog({
+			title: 'Ver ' + router.query.module,
+			data: producto,
+			view: detailView
+		})
+	}
+
+  	const emptyRows = pagination.page > 0 ? Math.max(0, (1 + pagination.page) * pagination.itemsPerPage - items.length) : 0;
 
   	return (
 		<Box sx={{ width: '100%' }}>
@@ -34,7 +37,7 @@ export default function TableView({
 				</Toolbar>
 				{
 					!loading ? (
-						rows.length > 0 ? (
+						(!!items && items.length > 0) ? (
 							<>
 								<TableContainer>
 									<Table>
@@ -48,32 +51,31 @@ export default function TableView({
 										</TableHead>
 										<TableBody>
 										{
-											rows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-												.map((row, index) => (
-													<TableRow hover tabIndex={-1} key={index} >
-														{
-															headCells.map((hc, i) => {
-																return (!(i > 0) && editable)
-																	? (
-																		<TableCell align='center' key={i}>
-																			<Button variant='text' style={{textTransform: 'lowercase'}} onClick={() => handleOpen(row)}>
-																				{row[hc.id]}
-																			</Button>
-																		</TableCell>
-																	) : <TableCell align="center" key={i}>{row[hc.id]}</TableCell>
-																	
-															})
-														}
-														<TableCell align="center">
-															<Tooltip title={"Eliminar " + (row.slug || row.alias)}>
-																<IconButton color="error">
-																	<DeleteIcon />
-																</IconButton>
-															</Tooltip>
-														</TableCell>
-													</TableRow>
-												))
-											}
+											pagedItems.map((item) => (
+												<TableRow hover tabIndex={-1} key={item.slug || item.alias} >
+													{
+														headCells.map((hc, idx) => {
+															return (idx == 0 && showDetails)
+																? (
+																	<TableCell align='center' key={`${item.slug || item.alias}_${hc.id}`}>
+																		<Button variant='text' style={{textTransform: 'lowercase'}} onClick={() => handleOpenDialog(item)}>
+																			{item[hc.id]}
+																		</Button>
+																	</TableCell>
+																) : <TableCell align="center" key={`${item.slug}_${hc.id}`}>{item[hc.id]}</TableCell>
+																
+														})
+													}
+													<TableCell align="center">
+														<Tooltip title={"Eliminar " + (item.slug || item.alias)}>
+															<IconButton color="error">
+																<DeleteIcon />
+															</IconButton>
+														</Tooltip>
+													</TableCell>
+												</TableRow>
+											))
+										}
 										{emptyRows > 0 && (
 											<TableRow
 												style={{
@@ -89,18 +91,18 @@ export default function TableView({
 								<TablePagination
 									rowsPerPageOptions={[5, 10, 25]}
 									component="div"
-									count={rows.length}
-									rowsPerPage={rowsPerPage}
-									page={page}
-									onPageChange={handleChangePage}
-									onRowsPerPageChange={handleChangeRowsPerPage}
+									count={items.length}
+									rowsPerPage={pagination.itemsPerPage}
+									page={pagination.page}
+									onPageChange={pagination.handleChangePage}
+									onRowsPerPageChange={pagination.handleChangeItemsPerPage}
 								/>
 							</>
 						) : (
 							<Box width={'100%'} height="360px" display="center" alignItems="center" justifyContent="center">
-							<Typography variant="h5" gutterBottom component="div">
-								No se encontraron resultados
-							</Typography>
+								<Typography variant="h5" gutterBottom component="div">
+									No se encontraron resultados
+								</Typography>
 							</Box>
 						)
 					) : (
@@ -113,3 +115,5 @@ export default function TableView({
 		</Box>
 	);
 }
+
+export default withRouter(TableView)

@@ -1,38 +1,42 @@
-import React, { useState } from 'react'
+import React, { useContext, useState } from 'react'
 import { Box, Button, FormControl, IconButton, InputAdornment, InputLabel, MenuItem, OutlinedInput, Select, Stack, Tooltip } from '@mui/material'
 import SearchIcon from '@mui/icons-material/Search';
 import AddIcon from '@mui/icons-material/Add';
+import { DialogContext } from './DialogContainer';
+import CategoriasForm from './CategoriasForm';
 
-const CategoriasSearch = ({handleOpened, handleData, base}) => {
+const CategoriasSearch = ({handleFilter, handleReset, checkpoint}) => {
+	const {openDialog} = useContext(DialogContext)
 	const [filter, setFilter] = useState({
 		titulo: '',
-		categoria: 'todas'
 	})
 
-	const handleFilter = ({target}) => {
+	const handleChange = ({target}) => {
 		setFilter({
 			...filter,
 			[target.name]: target.value
 		})
 	}
 
-	const filterRows = () => {
-		const {titulo, categoria} = filter
+	const filterData = () => {
+		const {titulo} = filter
 		
 		if(titulo.length === 0) {
-			handleData(base)
+			handleReset()
 		} else {
-			let filtered = base.filter(item => item.titulo.includes(titulo))
-
-			handleData(filtered)
+			handleFilter(checkpoint.filter(item => item.titulo.includes(titulo)))
 		}
 	}
 
 	const handleOpenDialog = () => {
-		handleOpened({
-			slug: '',
-			titulo: '',
-		}, 'agregar');
+		openDialog({
+			title: 'Agregar categoría',
+			data: {
+				slug: '',
+				titulo: '',
+			},
+			view: <CategoriasForm/>
+		});
 	}
 
 	return (
@@ -46,11 +50,11 @@ const CategoriasSearch = ({handleOpened, handleData, base}) => {
 						name="titulo"
 						placeholder={"Buscar por titulo"}
 						value={filter.titulo}
-						onChange={handleFilter}
+						onChange={handleChange}
 						endAdornment={
 						<InputAdornment position="end">
 							<Tooltip title="Buscar">
-								<IconButton edge="end" onClick={filterRows}>
+								<IconButton edge="end" onClick={filterData}>
 									<SearchIcon/>
 								</IconButton>
 							</Tooltip>

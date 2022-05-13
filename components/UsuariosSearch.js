@@ -1,45 +1,49 @@
-import React, { useState } from 'react'
+import React, { useContext, useState } from 'react'
 import { Box, Button, FormControl, Grid, IconButton, InputAdornment, InputLabel, MenuItem, OutlinedInput, Select, Stack, Tooltip } from '@mui/material'
 import SearchIcon from '@mui/icons-material/Search';
 import AddIcon from '@mui/icons-material/Add';
+import UsuarioForm from './UsuarioForm';
+import { DialogContext } from './DialogContainer';
 
-const UsuariosSearch = ({handleOpened, handleData, base}) => {
-
+const UsuariosSearch = ({handleFilter, handleReset, checkpoint}) => {
+	const {openDialog} = useContext(DialogContext)
 	const [filter, setFilter] = useState({
 		usuario: '',
 	})
 
-	const handleFilter = ({target}) => {
+	const handleChange = ({target}) => {
 		setFilter({
 			...filter,
 			[target.name]: target.value
 		})
 	}
 
-	const filterRows = () => {
+	const filterData = () => {
 		const {usuario} = filter
 		
 		if(usuario.length === 0) {
-			handleData(base)
+			handleReset()
 		} else {
-			let filtered = base.filter((item) => 
+			handleFilter(checkpoint.filter((item) => 
 				item.alias.includes(usuario) || (`${item.nombre} ${item.apellidoPaterno} ${item.apellidoMaterno}`).includes(usuario)
-			)
-
-			handleData(filtered)
+			))
 		}
 	}
 
 	const handleOpenDialog = () => {
-		handleOpened({
-			alias: '',
-			nombre: '',
-			apellidoPaterno: '',
-			apellidoMaterno: '',
-			correo: '',
-			telefono: '',
-			contra: '',
-		}, 'agregar');
+		openDialog({
+			title: 'Agregar usuario',
+			data: {
+				alias: '',
+				nombre: '',
+				apellidoPaterno: '',
+				apellidoMaterno: '',
+				correo: '',
+				telefono: '',
+				contra: '',
+			},
+			view: <UsuarioForm/>
+		});
 	}
 
 	return (
@@ -53,11 +57,11 @@ const UsuariosSearch = ({handleOpened, handleData, base}) => {
 						name="usuario"
 						placeholder={"Buscar por alias, nombre"}
 						value={filter.usuario}
-						onChange={handleFilter}
+						onChange={handleChange}
 						endAdornment={
 						<InputAdornment position="end">
 							<Tooltip title="Buscar">
-								<IconButton edge="end" onClick={filterRows}>
+								<IconButton edge="end" onClick={filterData}>
 									<SearchIcon/>
 								</IconButton>
 							</Tooltip>

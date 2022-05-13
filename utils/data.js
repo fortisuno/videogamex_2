@@ -62,7 +62,18 @@ export const appData = {
 			apellidoMaterno: 'Morales',
 			correo: 'pgomezm0486@gmail.com',
 			telefono: '+525529627269',
-			contra: 'jajaEsUnSecreto'
-		}
+			contra: 'secretpass',
+			tipo: 'admin'
+		},
+		{
+			alias: 'fortisdos',
+			nombre: 'Sofía Leticia',
+			apellidoPaterno: 'Gómez',
+			apellidoMaterno: 'Morales',
+			correo: 'sgomezm3982@gmail.com',
+			telefono: '+525529627269',
+			contra: 'secretpass',
+			tipo: 'vendedor'
+		},
 	],
  }
