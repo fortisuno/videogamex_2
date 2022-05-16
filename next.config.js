@@ -7,7 +7,8 @@ const nextConfig = {
     PROJECTID: process.env.PROJECTID,
     STORAGEBUCKET: process.env.STORAGEBUCKET,
     MESSAGINGSENDERID: process.env.MESSAGINGSENDERID,
-    APPID: process.env.APPID
+    APPID: process.env.APPID,
+    APIMASK: process.env.APIMASK
   }
 }
 

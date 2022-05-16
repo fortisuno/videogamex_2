@@ -1,19 +1,29 @@
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useEffect } from 'react'
+import { forms, headers, titles } from '../../utils/config';
+import PageTable from '../../components/PageTable';
+import { Box, Paper, Toolbar } from '@mui/material';
 import DashboardLayout from '../../components/DashboardLayout';
-import TableProductos from '../../components/TableProductos';
-import TableCategorias from '../../components/TableCategorias';
-import TableUsuarios from '../../components/TableUsuarios';
-import { db } from '../../utils/firebase';
+import { useFetch } from '../../hooks/useFetch';
+import PageSearch from '../../components/Search';
+import { useFormik } from 'formik';
+import SearchProductos from '../../components/SearchProductos';
 import axios from 'axios';
-import { collection, getDoc, getDocs } from 'firebase/firestore';
+import { useRouter } from 'next/router';
+import SearchCategorias from '../../components/SearchCategorias';
 
 export async function getStaticProps({params}) {
+	const data = {}
+
+	if(params.module === "productos") {
+		const categorias = await axios.get(process.env.APIMASK + "/api/categorias")
+		data.categorias = await categorias.data || []
+	}
+
+	data.slug = params.module
+	data.title = titles[params.module]
+
 	return {
-		props: {
-			data: {
-				slug:[ params.module],
-			}
-		},
+		props: { data },
 	}
 }
 
@@ -30,47 +40,36 @@ export async function getStaticPaths() {
 	};
 }
 
+
 const Module = ({data}) => {
-	const [tableData, setTableData] = useState({
-		rows: [],
-		loading: true
-	})
-
-	const loadTableData = useCallback((td) => {
-		setTableData(td)
-	}, [setTableData])
-
-	useEffect(() => {
-		const fetchData = async () => {
-			try {
-				const res = await axios.get('/api/'+data.slug[0])
-				loadTableData({loading: false, rows: res.data.entities})
-			} catch (error) {
-				console.log("error", error)
-				loadTableData({loading: false, rows: []})
-			}
-		}
-
-		fetchData()
-
-	}, [loadTableData, data])
-
+	const router = useRouter()
+	const {table, filterRows} = useFetch(`/api${router.asPath.substring(10)}`)
+	
 	return (
-		<ContentSwitch slug={data.slug[0]} data={tableData}/>
+		<Box sx={{ width: '100%' }}>
+			<Paper sx={{ width: '100%', mb: 3}}>
+				{
+					data.slug !== "resumen_de_ingresos" ? (
+						<React.Fragment>
+							<Toolbar sx={{py: 3}}>
+								{data.slug === 'productos' && <SearchProductos opciones={data.categorias} adminView={true}/>}
+								{data.slug === 'categorias' && <SearchCategorias/>}
+							</Toolbar>
+							<PageTable 
+								data={{
+									headers: headers[data.slug],
+									rows: !!table.data ?  table.data : []
+								}}
+								variant={data.slug}
+								detailed={data.slug === "categorias" ? false : true}
+								categorias={data.categorias}
+								loading={table.loading}/>
+						</React.Fragment>
+					) : <span>Pagina de resumen...</span>
+				}
+			</Paper>
+		</Box>
 	)
-}
-
-const ContentSwitch = ({slug, data}) => {
-	switch(slug) {
-		case 'productos':
-			return <TableProductos {...data}/>
-		case 'categorias':
-			return <TableCategorias {...data}/>
-		case 'usuarios':
-			return <TableUsuarios {...data}/>
-		default:
-			return <span>No disponible</span>
-	}
 }
 
 Module.getLayout = DashboardLayout.getLayout

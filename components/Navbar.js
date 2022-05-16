@@ -11,10 +11,8 @@ import MenuItem from '@mui/material/MenuItem';
 import SettingsIcon from '@mui/icons-material/Settings';
 import Link, { NextLinkComposed } from './Link'
 import { Avatar, Button } from '@mui/material';
-import { stringAvatar } from '../utils/functions';
-import { DialogContext } from './DialogContainer';
+import { DialogContext } from './PageDialog';
 import { SessionContext } from './Session';
-import UsuarioDetalle from './UsuarioDetalle';
 
 const settings = ['Ver cuenta', 'Cerrar sesión'];
 
@@ -36,7 +34,7 @@ const Navbar = ({dashboard}) => {
 		openDialog({
 			title: 'Ver usuario',
 			data: data.usuario,
-			view: <UsuarioDetalle/>
+			view: null
 		})
 	}
 

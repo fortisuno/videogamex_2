@@ -40,3 +40,37 @@ export const pages = [
 		title: 'Resumen de ingresos'
 	},
 ]
+
+export const titles = {
+	productos: "Productos",
+	categorias: "Categorias",
+	usuarios: "Usuarios",
+	historial_de_ventas: "Historial de ventas",
+	resumen_de_ingresos: "Resumen de ingresos"
+}
+
+export const headers = {
+	productos: ["id", "titulo", "categoria"],
+	categorias: ["id", "titulo"],
+	usuarios: ["id", "nombre", "apellidoPaterno", "apellidoMaterno"],
+	historial_de_ventas: ["id", "fecha", "empleado", "total_venta"]
+}
+
+export const columns = {
+	id: "Id",
+	titulo: "Titulo",
+	categoria: "Categoría",
+	nombre: "Nombre",
+	apellidoPaterno: "Apellido Paterno",
+	apellidoMaterno: "Apellido materno",
+	fecha: "Fecha",
+	encargaro: "Empleado",
+	total_venta: "Total de venta"
+}
+
+export const forms = {
+	productos: { titulo: '', categoria: 'todas' },
+	categorias: { titulo: '' },
+	usuarios: { usuario: '' },
+	historial_de_ventas: { usuario: '', fecha: '' },
+}

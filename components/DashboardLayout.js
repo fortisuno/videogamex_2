@@ -7,7 +7,7 @@ import SellIcon from '@mui/icons-material/Sell';
 import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
 import { Box } from '@mui/system';
 import Navbar from './Navbar';
-import Link, { NextLinkComposed } from './Link';
+import Link from './Link';
 import { pages } from '../utils/config';
 
 const drawerWidth = 300;
@@ -38,7 +38,7 @@ const DashboardLayout = ({data, children}) => {
 					{
 						modules.map((module, i) => (
 							<ListItem key={i} disablePadding>
-								<ListItemButton selected={module.slug === data.slug[0] ? true : false} component={Link} noLinkStyle href={'/dashboard/' + module.slug}>
+								<ListItemButton selected={module.slug === data.slug ? true : false} component={Link} noLinkStyle href={'/dashboard/' + module.slug}>
 									<ListItemIcon>
 										{module.icon}
 									</ListItemIcon>
@@ -54,7 +54,7 @@ const DashboardLayout = ({data, children}) => {
 				<Toolbar/>
 				<Container maxWidth="lg">
 					<Typography variant="h2" gutterBottom marginBottom={5} component="div">
-						{ pages.find(page => page.slug === data.slug[0]).title }
+						{ pages.find(page => page.slug === data.slug).title }
 					</Typography>
 					{children}
 				</Container>

@@ -1,5 +1,5 @@
 import { Button, Card, CardActions, CardContent, CardMedia, Typography } from '@mui/material'
-import React, { useContext } from 'react'
+import React, { useContext, useEffect } from 'react'
 import NoImage from './NoImage'
 import AddShoppingCartIcon from '@mui/icons-material/AddShoppingCart';
 import { CarritoContext } from './Carrito';
@@ -9,12 +9,13 @@ const ProductoCard = ({producto}) => {
 
     const {carrito, setCarrito} = useContext(CarritoContext)
 
+
     const addToCarrito = (data) => {
-      const producto = carrito.find((item) => item.slug === data.slug)
+      const producto = carrito.find((item) => item.id === data.id)
       
       if(!!producto) {
         setCarrito(carrito.map((item) => {
-          if (item.slug === producto.slug) {
+          if (item.id === producto.id) {
             item.cantidad++;
           }
           return item;

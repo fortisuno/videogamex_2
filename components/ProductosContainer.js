@@ -3,7 +3,7 @@ import React, { useCallback } from 'react'
 import { useDialog } from '../hooks/useDialog';
 import { useTable } from '../hooks/useTable';
 import ProductoCard from './ProductoCard';
-import ProductosSearch from './ProductosSearch'
+import SearchProductos from './SearchProductos'
 import moment from 'moment';
 import { useFilteredData } from '../hooks/useFilteredData';
 
@@ -18,7 +18,7 @@ const ProductosContainer = ({data}) => {
 	return (
 		<Box width={"100%"} >
 			<Toolbar sx={{ mb: 5, px: 0 }} disableGutters>
-				<ProductosSearch handleFilter={handleFilter} handleReset={handleReset} checkpoint={items} withAddButton={false}/>
+				<SearchProductos handleFilter={handleFilter} handleReset={handleReset} checkpoint={items} withAddButton={false}/>
 			</Toolbar>
 			<Box sx={{
 				display: "grid",
@@ -26,7 +26,7 @@ const ProductosContainer = ({data}) => {
 				gap: 5
 			}}>
 				{
-					items.map((producto, idx) => <ProductoCard key={producto.slug + "_" + idx + moment().toDate().getTime()} producto={producto}/>)
+					items.map((producto, idx) => <ProductoCard key={producto.id + "_" + idx + moment().toDate().getTime()} producto={producto}/>)
 				}
 			</Box>
 		</Box>

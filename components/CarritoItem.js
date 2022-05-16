@@ -10,7 +10,7 @@ const CarritoItem = ({data}) => {
 
 	const updateItem = ({target}) => {
 		setCarrito(carritoPrev => carritoPrev.map((item) => {
-			if (item.slug === data.slug) {
+			if (item.id === data.id) {
             item.cantidad = target.value;
           }
           return item;
@@ -18,7 +18,7 @@ const CarritoItem = ({data}) => {
 	}
 
 	const removeItem = () => {
-		setCarrito(carritoPrev => carritoPrev.filter((item) => item.slug !== data.slug))
+		setCarrito(carritoPrev => carritoPrev.filter((item) => item.id !== data.id))
 	}
 
 	return (

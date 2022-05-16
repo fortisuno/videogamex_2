@@ -31,3 +31,14 @@ export const stringAvatar = (name) => ({
 	},
 	children: `${name.split(' ')[0][0]}${name.split(' ')[1][0]}`,
 })
+
+export const getQuery = (search, empty) => {
+	const query = search.replace(/(^[\w\W]+\?)|(^[\w\W]+$)/g,"").replace(/&/g, '","').replace(/=/g,'":"')
+
+	if(query.match(/^(\w+":"\w+",")*\w+":"\w+$/g)) {
+		const initialSearch = JSON.parse('{"' + query + '"}', (key, value) => key === '' ? value : decodeURIComponent(value).replace(/\+/g, ' '))
+		empty.titulo = !!initialSearch.titulo ? initialSearch.titulo : ''
+		empty.categoria = !!initialSearch.categoria ? initialSearch.categoria : ''
+	}
+	return empty
+} 

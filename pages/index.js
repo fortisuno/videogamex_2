@@ -11,11 +11,8 @@ import CarritoItem from "../components/CarritoItem";
 import { CarritoContext } from "../components/Carrito";
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import CloseIcon from '@mui/icons-material/Close';
-import UsuariosDialog from '../components/UsuariosDialog'
-import { useDialog } from "../hooks/useDialog";
-import { SessionContext } from "../components/Session";
-import DialogContainer from "../components/DialogContainer";
 import axios from "axios";
+import { useRouter } from 'next/router'
 
 export async function getStaticProps(ctx) {
 
@@ -37,6 +34,7 @@ export default function Home() {
 	const [total, setTotal] = useState(0)
 	const [pago, setPago] = useState(0)
 	const [cambio, setCambio] = useState(0)
+	const router = useRouter()
 
 	const loadProductos = useCallback((p) => setProductos(p), [setProductos])
 	const updateTotal = useCallback((t) => setTotal(t), [setTotal])
@@ -44,16 +42,11 @@ export default function Home() {
 	const resetPago = useCallback(() => setPago(0), [setPago])
 
 	useEffect(() => {
-		const fetchData = async () => {
-			try {
-				const {data} = await axios.get('/api/productos')
-				loadProductos(data.entities)
-			} catch (error) {
-				console.log("error", error)
-			}
-		}
-
-		fetchData()
+		console.log(router.asPath.substring(1))
+		axios.get('/api/productos')
+			.then(({data}) => {
+				loadProductos(data)
+			})
 	}, [loadProductos])
 
 	useEffect(() => {

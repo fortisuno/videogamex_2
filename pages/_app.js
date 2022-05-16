@@ -2,7 +2,7 @@ import { CacheProvider } from "@emotion/react"
 import { CssBaseline, ThemeProvider } from "@mui/material"
 import axios from "axios";
 import { useCallback, useEffect, useState } from "react";
-import DialogContainer from "../components/DialogContainer";
+import PageDialog from "../components/PageDialog";
 import { SessionContext } from "../components/Session";
 import { createEmotionCache, theme } from "../utils/config"
 import { appData } from "../utils/data";
@@ -19,17 +19,7 @@ function MyApp({ Component, emotionCache = clientSideEmotionCache, pageProps }) 
 
   useEffect(() => {
 
-    const fetchData = async () => {
-      try {
-				const {data} = await axios.get('/api/categorias')
-				loadCategorias(data.entities)
-			} catch (error) {
-				console.log("error", error)
-			}
-    }
-    
     loadUsuario(appData.usuarios[0])
-    fetchData()
 
   }, [loadUsuario, loadCategorias])
 
@@ -38,14 +28,14 @@ function MyApp({ Component, emotionCache = clientSideEmotionCache, pageProps }) 
       <ThemeProvider theme={theme}>
         {/* CssBaseline kickstart an elegant, consistent, and simple baseline to build upon. */}
         <CssBaseline />
-        <SessionContext.Provider value={{usuario, categorias}}>
-          <DialogContainer>
+        <SessionContext.Provider value={{usuario}}>
+          <PageDialog>
             {
               Component.getLayout
                 ? Component.getLayout(pageProps.data, <Component {...pageProps} />)
                 : <Component {...pageProps} />
             }
-          </DialogContainer>
+          </PageDialog>
         </SessionContext.Provider>
       </ThemeProvider>
     </CacheProvider>
