@@ -10,9 +10,26 @@ import SearchProductos from '../../components/SearchProductos';
 import axios from 'axios';
 import { useRouter } from 'next/router';
 import SearchCategorias from '../../components/SearchCategorias';
+import { getSession } from 'next-auth/react';
 
-export async function getStaticProps({params}) {
+export async function getServerSideProps(ctx) {
+	
+	const session = await getSession(ctx)
 	const data = {}
+	const paths = [
+		"productos",
+		"categorias",
+		"usuarios"
+	]
+
+	const {params} = ctx
+
+	if(!paths.includes(params.module)) {
+		return {
+			notFound: true,
+		}
+	}
+	
 
 	if(params.module === "productos") {
 		const categorias = await axios.get(process.env.APIMASK + "/api/categorias")
@@ -22,24 +39,19 @@ export async function getStaticProps({params}) {
 	data.slug = params.module
 	data.title = titles[params.module]
 
+	if(!session) {
+		return {
+			redirect: {
+				destination: '/login',
+				permanent: false
+			}
+		}
+	}
+
 	return {
 		props: { data },
 	}
 }
-
-export async function getStaticPaths() {
-	return {
-		paths: [
-			{ params: { module: 'productos' } },
-			{ params: { module: 'categorias' } },
-			{ params: { module: 'usuarios' } },
-			{ params: { module: 'historial_de_ventas' } },
-			{ params: { module: 'resumen_de_ingresos' } },
-		],
-		fallback: false
-	};
-}
-
 
 const Module = ({data}) => {
 	const router = useRouter()

@@ -13,14 +13,25 @@ import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import CloseIcon from '@mui/icons-material/Close';
 import axios from "axios";
 import { useRouter } from 'next/router'
+import {getSession} from 'next-auth/react'
 
-export async function getStaticProps(ctx) {
+export async function getServerSideProps(ctx) {
+
+	const session = await getSession(ctx)
+
+	if(!session) return {
+		redirect: {
+			destination: '/login',
+			permanent: false
+		}
+	}
 
 	return {
 		props: {
+			session,
 			data: {
-			title: 'Inicio',
-			admin: false
+				slug: '',
+				title: 'Inicio'
 			}
 		}, // will be passed to the page component as props
 	}
@@ -28,7 +39,7 @@ export async function getStaticProps(ctx) {
 
 
 
-export default function Home() {
+export default function Home({session}) {
 	const [productos, setProductos] = useState([])
 	const [carrito, setCarrito] = useState([])
 	const [total, setTotal] = useState(0)
@@ -42,7 +53,14 @@ export default function Home() {
 	const resetPago = useCallback(() => setPago(0), [setPago])
 
 	useEffect(() => {
-		console.log(router.asPath.substring(1))
+
+		const userData = async () => {
+			const session = await getSession()
+			console.log(session)
+		}
+		
+		userData();
+
 		axios.get('/api/productos')
 			.then(({data}) => {
 				loadProductos(data)

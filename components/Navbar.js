@@ -13,13 +13,13 @@ import Link, { NextLinkComposed } from './Link'
 import { Avatar, Button } from '@mui/material';
 import { DialogContext } from './PageDialog';
 import { SessionContext } from './Session';
+import { signOut } from 'next-auth/react';
 
 const settings = ['Ver cuenta', 'Cerrar sesión'];
 
 const Navbar = ({dashboard}) => {
 	const [anchorElUser, setAnchorElUser] = React.useState(null);
 	const {openDialog} = useContext(DialogContext)
-	const {usuario} = useContext(SessionContext)
 
 	const handleOpenUserMenu = (event) => {
 		setAnchorElUser(event.currentTarget);
@@ -61,7 +61,7 @@ const Navbar = ({dashboard}) => {
 
 					<Box flexGrow={1} display="flex" justifyContent="right" gap={5}>
 						{
-							!!usuario && usuario.tipo === 'admin' && (
+							/*!!usuario && usuario.tipo === 'admin' && (
 								<Button
 									variant="outlined"
 									color={dashboard ? "inherit" : "primary"}
@@ -71,8 +71,17 @@ const Navbar = ({dashboard}) => {
 								>
 									{dashboard ? "Ir a la tienda" : "Ir al dashboard"}
 								</Button>
-							)
+							)*/
 						}
+						<Button
+							variant="outlined"
+							color={dashboard ? "inherit" : "primary"}
+							component={Link}
+							noLinkStyle
+							href={dashboard ? "/" : "/dashboard/productos"}
+						>
+							{dashboard ? "Ir a la tienda" : "Ir al dashboard"}
+						</Button>
 						<Tooltip title="Open settings">
 							<IconButton onClick={handleOpenUserMenu} color="inherit">
 								<SettingsIcon/>
@@ -97,7 +106,7 @@ const Navbar = ({dashboard}) => {
 							<MenuItem onClick={ handleOpenDialog }>
 								<Typography textAlign="center">Ver cuenta</Typography>
 							</MenuItem>
-							<MenuItem onClick={handleCloseUserMenu}>
+							<MenuItem onClick={ () => signOut() }>
 								<Typography textAlign="center">Cerrar sesión</Typography>
 							</MenuItem>
 						</Menu>
