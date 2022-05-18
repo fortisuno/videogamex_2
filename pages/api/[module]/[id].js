@@ -1,3 +1,4 @@
+import { deleteUser } from "firebase/auth";
 import { deleteDoc, doc, getDoc, updateDoc } from "firebase/firestore";
 import { db } from "../../../utils/firebase";
 
@@ -15,6 +16,9 @@ const handlerDocument = async (req, res) => {
 				res.status(404).end();
 			}
 		} else if (req.method === 'DELETE') {
+			if(module === "usuarios") {
+				await deleteUser(id)
+			}
 			await deleteDoc(doc(db, module, id))
 		}
 	  	res.status(200).end();

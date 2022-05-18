@@ -1,25 +1,49 @@
-import React from 'react'
+import { Dialog, DialogContent, DialogTitle } from "@mui/material";
+import React, { createContext, useContext, useState } from "react";
+import { usePageData } from "./usePageData";
+
+const DialogContext = createContext();
+
+export const DialogProvider = ({ children }) => {
+	const [dialog, setDialog] = useState({
+		open: false,
+		titulo: "",
+		updated: false,
+		content: null
+	});
+
+	const handleCloseDialog = () => {
+		setDialog({
+			open: false,
+			titulo: dialog.titulo,
+			updated: false,
+			content: dialog.content
+		});
+	};
+
+	const handleOpenDialog = ({ titulo, content, updated = false }) => {
+		setDialog({ titulo, content, updated, open: true });
+	};
+
+	return (
+		<DialogContext.Provider
+			value={{
+				...dialog,
+				handleCloseDialog,
+				handleOpenDialog
+			}}
+		>
+			<Dialog onClose={handleCloseDialog} open={dialog.open} maxWidth="md" fullWidth>
+				<DialogTitle variant="h4" textAlign={"center"} sx={{ pb: 5 }}>
+					{dialog.titulo}
+				</DialogTitle>
+				<DialogContent>{dialog.content}</DialogContent>
+			</Dialog>
+			{children}
+		</DialogContext.Provider>
+	);
+};
 
 export const useDialog = () => {
-	const [opened, setOpened] = React.useState(false)
-	const [data, setData] = React.useState({})
-	const [dialogView, setDialogView] = React.useState('ver')
-
-	const handleOpen = React.useCallback((data, view = 'ver') => {
-		setDialogView(view)
-		setData(data)
-		setOpened(true)
-	 }, [setOpened, setData])
-  
-	const handleClose = React.useCallback((event, reason) => {
-		if(reason && reason == "backdropClick")
-			return;
-		setOpened(false)
-	}, [setOpened])
-
-	const handleDialogView = React.useCallback((view) => {
-		setDialogView(view)
-	}, [setDialogView])
-
-	return {opened, data, dialogView, handleOpen, handleClose, handleDialogView}
-}
+	return useContext(DialogContext);
+};

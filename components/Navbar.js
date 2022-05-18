@@ -14,12 +14,13 @@ import { Avatar, Button } from '@mui/material';
 import { DialogContext } from './PageDialog';
 import { SessionContext } from './Session';
 import { signOut } from 'next-auth/react';
+import { usePageData } from '@hooks/usePageData';
 
 const settings = ['Ver cuenta', 'Cerrar sesión'];
 
 const Navbar = ({dashboard}) => {
 	const [anchorElUser, setAnchorElUser] = React.useState(null);
-	const {openDialog} = useContext(DialogContext)
+	const {usuario} = usePageData()
 
 	const handleOpenUserMenu = (event) => {
 		setAnchorElUser(event.currentTarget);
@@ -40,7 +41,7 @@ const Navbar = ({dashboard}) => {
 
 	return (
 		<AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }} color={dashboard ? 'primary' : 'secondary'}>
-			<Container maxWidth="xl">
+			<Box px={10}>
 				<Toolbar disableGutters>
 					<Typography
 						variant="h6"
@@ -61,7 +62,7 @@ const Navbar = ({dashboard}) => {
 
 					<Box flexGrow={1} display="flex" justifyContent="right" gap={5}>
 						{
-							/*!!usuario && usuario.tipo === 'admin' && (
+							usuario.role === 'admin' && (
 								<Button
 									variant="outlined"
 									color={dashboard ? "inherit" : "primary"}
@@ -71,17 +72,8 @@ const Navbar = ({dashboard}) => {
 								>
 									{dashboard ? "Ir a la tienda" : "Ir al dashboard"}
 								</Button>
-							)*/
+							)
 						}
-						<Button
-							variant="outlined"
-							color={dashboard ? "inherit" : "primary"}
-							component={Link}
-							noLinkStyle
-							href={dashboard ? "/" : "/dashboard/productos"}
-						>
-							{dashboard ? "Ir a la tienda" : "Ir al dashboard"}
-						</Button>
 						<Tooltip title="Open settings">
 							<IconButton onClick={handleOpenUserMenu} color="inherit">
 								<SettingsIcon/>
@@ -103,16 +95,13 @@ const Navbar = ({dashboard}) => {
 							open={Boolean(anchorElUser)}
 							onClose={handleCloseUserMenu}
 						>
-							<MenuItem onClick={ handleOpenDialog }>
-								<Typography textAlign="center">Ver cuenta</Typography>
-							</MenuItem>
 							<MenuItem onClick={ () => signOut() }>
 								<Typography textAlign="center">Cerrar sesión</Typography>
 							</MenuItem>
 						</Menu>
 					</Box>
 				</Toolbar>
-			</Container>
+			</Box>
 		</AppBar>
 	)
 }

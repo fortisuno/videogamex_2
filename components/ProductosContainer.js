@@ -6,6 +6,7 @@ import ProductoCard from './ProductoCard';
 import SearchProductos from './SearchProductos'
 import moment from 'moment';
 import { useFilteredData } from '../hooks/useFilteredData';
+import ProductoSearch from './productos/ProductoSearch';
 
 const ProductosContainer = ({data}) => {
 	const {items, pagedItems, pagination, filterItems, resetItems} = useFilteredData(data)
@@ -18,7 +19,7 @@ const ProductosContainer = ({data}) => {
 	return (
 		<Box width={"100%"} >
 			<Toolbar sx={{ mb: 5, px: 0 }} disableGutters>
-				<SearchProductos handleFilter={handleFilter} handleReset={handleReset} checkpoint={items} withAddButton={false}/>
+				<ProductoSearch/>
 			</Toolbar>
 			<Box sx={{
 				display: "grid",

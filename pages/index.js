@@ -14,6 +14,9 @@ import CloseIcon from '@mui/icons-material/Close';
 import axios from "axios";
 import { useRouter } from 'next/router'
 import {getSession} from 'next-auth/react'
+import LayoutVenta from "@components/layouts/LayoutVenta";
+import { usePageData } from "@hooks/usePageData";
+import { auth } from "@utils/firebase";
 
 export async function getServerSideProps(ctx) {
 
@@ -26,12 +29,20 @@ export async function getServerSideProps(ctx) {
 		}
 	}
 
+	const usuario = await axios.get(process.env.APIMASK + "/api/usuarios/" + auth.currentUser.uid);
+	const categorias = await axios.get(process.env.APIMASK + "/api/categorias");
+
 	return {
 		props: {
-			session,
-			data: {
-				slug: '',
-				title: 'Inicio'
+			layoutProps: {
+				titulo: "Punto de venta",
+				query: ctx.query,
+				apiPath: ctx.resolvedUrl.replace("/", "/api/productos"),
+				currentPage: "inicio",
+				usuario: usuario.data,
+				extras: {
+					categorias: categorias.data
+				}
 			}
 		}, // will be passed to the page component as props
 	}
@@ -39,33 +50,21 @@ export async function getServerSideProps(ctx) {
 
 
 
-export default function Home({session}) {
-	const [productos, setProductos] = useState([])
+export default function Home({}) {
+	const {loadData, data} = usePageData()
 	const [carrito, setCarrito] = useState([])
 	const [total, setTotal] = useState(0)
 	const [pago, setPago] = useState(0)
 	const [cambio, setCambio] = useState(0)
 	const router = useRouter()
 
-	const loadProductos = useCallback((p) => setProductos(p), [setProductos])
 	const updateTotal = useCallback((t) => setTotal(t), [setTotal])
 	const updateCambio = useCallback((c) => setCambio(c), [setCambio])
 	const resetPago = useCallback(() => setPago(0), [setPago])
 
 	useEffect(() => {
-
-		const userData = async () => {
-			const session = await getSession()
-			console.log(session)
-		}
-		
-		userData();
-
-		axios.get('/api/productos')
-			.then(({data}) => {
-				loadProductos(data)
-			})
-	}, [loadProductos])
+		loadData()
+	}, [loadData])
 
 	useEffect(() => {
 		let compra = 0;
@@ -93,7 +92,7 @@ export default function Home({session}) {
 		<CarritoContext.Provider value={{carrito, setCarrito}}>
 			<Stack direction="row" sx={{height:'100%', width: '100%'}} divider={<Divider orientation="vertical" flexItem  />} py={5} spacing={4}>
 				<Box flexGrow={1}>
-					<ProductosContainer data={productos}/>
+					<ProductosContainer data={data}/>
 				</Box>
 				<Box width={350}>
 					<Box position={"sticky"} sx={{width:"100%", height: "80vh", top: 104 }}>
@@ -143,4 +142,4 @@ export default function Home({session}) {
 	)
 }
 
-Home.getLayout = VentaLayout.getLayout
+Home.getLayout = LayoutVenta.getLayout

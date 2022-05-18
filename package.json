@@ -19,6 +19,7 @@
     "axios": "^0.27.2",
     "firebase": "^9.8.1",
     "formik": "^2.2.9",
+    "material-ui-confirm": "^3.0.4",
     "moment": "^2.29.3",
     "next": "12.1.6",
     "next-auth": "^4.3.4",

@@ -1,19 +1,19 @@
 import createCache from "@emotion/cache"
 import { createTheme } from "@mui/material";
-import { red } from '@mui/material/colors';
+import { blue, red } from '@mui/material/colors';
 
 export const createEmotionCache = () => createCache({ key: 'css', prepend: true });
 
 export const theme = createTheme({
 	palette: {
 		primary: {
-			main: '#2196f3',
+			main: blue[600],
 		},
 		secondary: {
 			main: '#ffffff',
 		},
 		error: {
-			main: "#f44336",
+			main: red[700],
 		},
 	},
 });
