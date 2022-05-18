@@ -36,9 +36,9 @@ export const getServerSideProps = async (ctx) => {
 			}
 		};
 
-		const usuario = await axios.get(process.env.APIMASK + "/api/usuarios/" + auth.currentUser.uid);
+		const usuarios = await axios.get(process.env.APIMASK + "/api/usuarios/");
 
-	if (usuario.data.role !== "admin")
+	if (!usuarios.some(u => u.id === auth.currentUser.uid))
 		return {
 			redirect: {
 				destination: "/",
