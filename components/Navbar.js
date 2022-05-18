@@ -59,18 +59,28 @@ const Navbar = ({dashboard}) => {
 
 					<Box flexGrow={1} display="flex" justifyContent="right" gap={5}>
 						{
-							usuario.role === 'admin' && (
-								<Button
-									variant="outlined"
-									color={dashboard ? "inherit" : "primary"}
-									component={Link}
-									noLinkStyle
-									href={dashboard ? "/" : "/dashboard/productos"}
-								>
-									{dashboard ? "Ir a la tienda" : "Ir al dashboard"}
-								</Button>
-							)
+							// usuario.role === 'admin' && (
+							// 	<Button
+							// 		variant="outlined"
+							// 		color={dashboard ? "inherit" : "primary"}
+							// 		component={Link}
+							// 		noLinkStyle
+							// 		href={dashboard ? "/" : "/dashboard/productos"}
+							// 	>
+							// 		{dashboard ? "Ir a la tienda" : "Ir al dashboard"}
+							// 	</Button>
+							// )
 						}
+						<Button
+							variant="outlined"
+							color={dashboard ? "inherit" : "primary"}
+							component={Link}
+							noLinkStyle
+							href={dashboard ? "/" : "/dashboard/productos"}
+						>
+							{dashboard ? "Ir a la tienda" : "Ir al dashboard"}
+						</Button>
+					
 						<Tooltip title="Open settings">
 							<IconButton onClick={handleOpenUserMenu} color="inherit">
 								<SettingsIcon/>

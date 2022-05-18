@@ -17,10 +17,7 @@ export async function getServerSideProps(ctx) {
 	const session = await getSession(ctx)
 
 	if(session) {
-		let usuario = {}
-		if(!!auth.currentUser) {
-			usuario = await axios.get(process.env.APIMASK + "/api/usuarios/" + auth.currentUser.uid);
-		}
+
 		const categorias = await axios.get(process.env.APIMASK + "/api/categorias");
 
 		return {
@@ -30,7 +27,6 @@ export async function getServerSideProps(ctx) {
 					query: ctx.query,
 					apiPath: ctx.resolvedUrl.replace("/", "/api/productos"),
 					currentPage: "inicio",
-					usuario: usuario.data || {},
 					extras: {
 						categorias: categorias.data
 					}
