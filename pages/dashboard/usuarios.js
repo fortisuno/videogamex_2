@@ -37,9 +37,9 @@ export const getServerSideProps = async (ctx) => {
 			}
 		};
 
-		const usuarios = await axios.get(process.env.APIMASK + "/api/usuarios/");
+	const usuario = await axios.get(process.env.APIMASK + "/api/usuarios/" + session.user.email);
 
-	if (!usuarios.some(u => u.id === auth.currentUser.uid))
+	if (usuario.data.role !== "admin")
 		return {
 			redirect: {
 				destination: "/",
@@ -55,7 +55,7 @@ export const getServerSideProps = async (ctx) => {
 				titulo: "Usuarios",
 				query: ctx.query,
 				apiPath: ctx.resolvedUrl.replace("dashboard", "api"),
-				currentPage: "usuarios",
+				usuario: usuario.data,
 				extras: {}
 			}
 		}

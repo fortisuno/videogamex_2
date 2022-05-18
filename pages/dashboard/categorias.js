@@ -34,15 +34,15 @@ export const getServerSideProps = async (ctx) => {
 			}
 		};
 
-		const usuarios = await axios.get(process.env.APIMASK + "/api/usuarios/");
+		const usuario = await axios.get(process.env.APIMASK + "/api/usuarios/" + session.user.email);
 
-	if (!usuarios.some(u => u.id === auth.currentUser.uid))
-		return {
-			redirect: {
-				destination: "/",
-				permanent: false
-			}
-		};
+		if (usuario.data.role !== "admin")
+			return {
+				redirect: {
+					destination: "/",
+					permanent: false
+				}
+			};
 
 	return {
 		props: {

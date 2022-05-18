@@ -56,13 +56,21 @@ const handlerCollection = async (req, res) => {
 				res.status(400).end();
 			}
 		} else if (req.method === "POST") {
-			const { id } = req.body;
+			const { id, correo } = req.body;
 			if (entitiesData.some((data) => {
+				if(module === "usuarios") {
+					return data.correo === correo
+				}
 				return data.id === id
 			})) {
 				res.status(400).end();
 			} else {
-				await setDoc(doc(db, module, id), req.body);
+
+				if(module === 'usuarios') {
+					await setDoc(doc(db, module, correo), req.body);
+				} else {
+					await setDoc(doc(db, module, id), req.body);
+				}
 			}
 		}
 		res.status(200).end();

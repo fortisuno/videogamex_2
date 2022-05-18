@@ -1,6 +1,8 @@
+import { auth } from "@utils/firebase";
 import axios from "axios";
 import { useConfirm } from "material-ui-confirm";
-import { createContext, useContext, useState, useCallback } from "react";
+import { getSession } from "next-auth/react";
+import { createContext, useContext, useState, useCallback, useEffect } from "react";
 
 const PageDataContext = createContext();
 
@@ -22,7 +24,7 @@ export const PageDataProvider = ({ url, extras, usuario, children }) => {
 					setItems({
 						loading: false,
 						errors: null,
-						data: !!usuario ? data.filter(d => d.correo !== usuario.correo) : data
+						data: !!usuario ? data.filter((d) => d.correo !== usuario.correo) : data
 					});
 				})
 				.catch(() => {

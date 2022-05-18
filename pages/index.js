@@ -25,17 +25,9 @@ export async function getServerSideProps(ctx) {
 	const session = await getSession(ctx);
 
 	if (session) {
-		const usuarios = await axios.get(process.env.APIMASK + "/api/usuarios/");
-
-		if (!usuarios.some((u) => u.id === auth.currentUser.uid))
-			return {
-				redirect: {
-					destination: "/",
-					permanent: false
-				}
-			};
-
 		const categorias = await axios.get(process.env.APIMASK + "/api/categorias");
+
+		const usuario = await axios.get(process.env.APIMASK + "/api/usuarios/" + session.user.email);
 
 		return {
 			props: {
@@ -44,6 +36,7 @@ export async function getServerSideProps(ctx) {
 					query: ctx.query,
 					apiPath: ctx.resolvedUrl.replace("/", "/api/productos"),
 					currentPage: "inicio",
+					usuario: usuario.data,
 					extras: {
 						categorias: categorias.data
 					}
