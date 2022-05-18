@@ -1,50 +1,51 @@
-import { Box, Button, Container, Divider, FormControl, Grid, IconButton, InputAdornment, InputLabel, List, ListItem, ListItemText, OutlinedInput, Stack, TextField, Typography } from "@mui/material";
-import { createContext, useCallback, useContext, useEffect, useState } from "react";
-import DefaultLayout from "../components/DefaultLayout";
-import Navbar from "../components/Navbar";
-import ProductosContainer from "../components/ProductosContainer";
-import VentaLayout from "../components/VentaLayout";
-import { appData } from "../utils/data";
-import DeleteIcon from '@mui/icons-material/Delete';
-import AddIcon from '@mui/icons-material/Add';
-import CarritoItem from "../components/CarritoItem";
-import { CarritoContext } from "../components/Carrito";
-import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
-import CloseIcon from '@mui/icons-material/Close';
-import axios from "axios";
-import { useRouter } from 'next/router'
-import {getSession} from 'next-auth/react'
 import LayoutVenta from "@components/layouts/LayoutVenta";
 import { usePageData } from "@hooks/usePageData";
+import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
+import CloseIcon from '@mui/icons-material/Close';
+import { Box, Button, Divider, InputAdornment, List, Stack, TextField, Typography } from "@mui/material";
 import { auth } from "@utils/firebase";
+import axios from "axios";
+import { getSession } from 'next-auth/react';
+import { useRouter } from 'next/router';
+import { useCallback, useEffect, useState } from "react";
+import { CarritoContext } from "../components/Carrito";
+import CarritoItem from "../components/CarritoItem";
+import ProductosContainer from "../components/ProductosContainer";
 
 export async function getServerSideProps(ctx) {
 
 	const session = await getSession(ctx)
 
-	if(!session) return {
+	if(session) {
+		let usuario = {}
+		if(!!auth.currentUser) {
+			usuario = await axios.get(process.env.APIMASK + "/api/usuarios/" + auth.currentUser.uid);
+		}
+		const categorias = await axios.get(process.env.APIMASK + "/api/categorias");
+
+		return {
+			props: {
+				layoutProps: {
+					titulo: "Punto de venta",
+					query: ctx.query,
+					apiPath: ctx.resolvedUrl.replace("/", "/api/productos"),
+					currentPage: "inicio",
+					usuario: usuario.data || {},
+					extras: {
+						categorias: categorias.data
+					}
+				}
+			}, // will be passed to the page component as props
+		}
+	}
+
+	
+
+	return {
 		redirect: {
 			destination: '/login',
 			permanent: false
 		}
-	}
-
-	const usuario = await axios.get(process.env.APIMASK + "/api/usuarios/" + auth.currentUser.uid);
-	const categorias = await axios.get(process.env.APIMASK + "/api/categorias");
-
-	return {
-		props: {
-			layoutProps: {
-				titulo: "Punto de venta",
-				query: ctx.query,
-				apiPath: ctx.resolvedUrl.replace("/", "/api/productos"),
-				currentPage: "inicio",
-				usuario: usuario.data,
-				extras: {
-					categorias: categorias.data
-				}
-			}
-		}, // will be passed to the page component as props
 	}
 }
 

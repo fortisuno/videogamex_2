@@ -1,11 +1,8 @@
-import { Box, Toolbar } from '@mui/material'
-import React, { useCallback } from 'react'
-import { useDialog } from '../hooks/useDialog';
-import { useTable } from '../hooks/useTable';
-import ProductoCard from './ProductoCard';
-import SearchProductos from './SearchProductos'
+import { Box, Toolbar } from '@mui/material';
 import moment from 'moment';
+import React, { useCallback } from 'react';
 import { useFilteredData } from '../hooks/useFilteredData';
+import ProductoCard from './ProductoCard';
 import ProductoSearch from './productos/ProductoSearch';
 
 const ProductosContainer = ({data}) => {

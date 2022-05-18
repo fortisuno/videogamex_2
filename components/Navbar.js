@@ -1,20 +1,17 @@
-import React, { useContext } from 'react'
+import { usePageData } from '@hooks/usePageData';
+import SettingsIcon from '@mui/icons-material/Settings';
+import { Button } from '@mui/material';
 import AppBar from '@mui/material/AppBar';
 import Box from '@mui/material/Box';
-import Toolbar from '@mui/material/Toolbar';
 import IconButton from '@mui/material/IconButton';
-import Typography from '@mui/material/Typography';
 import Menu from '@mui/material/Menu';
-import Container from '@mui/material/Container';
-import Tooltip from '@mui/material/Tooltip';
 import MenuItem from '@mui/material/MenuItem';
-import SettingsIcon from '@mui/icons-material/Settings';
-import Link, { NextLinkComposed } from './Link'
-import { Avatar, Button } from '@mui/material';
-import { DialogContext } from './PageDialog';
-import { SessionContext } from './Session';
+import Toolbar from '@mui/material/Toolbar';
+import Tooltip from '@mui/material/Tooltip';
+import Typography from '@mui/material/Typography';
 import { signOut } from 'next-auth/react';
-import { usePageData } from '@hooks/usePageData';
+import React from 'react';
+import Link from './Link';
 
 const settings = ['Ver cuenta', 'Cerrar sesión'];
 
