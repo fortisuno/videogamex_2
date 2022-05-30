@@ -18,6 +18,7 @@ import { AdapterMoment } from "@mui/x-date-pickers/AdapterMoment";
 import "moment/locale/es";
 import { ConfirmProvider } from "material-ui-confirm";
 import ResumenDeIngresos from "./views/Dashboard/ResumenDeIngresos";
+import CarritoProvider from "./providers/CarritoProvider";
 
 function App() {
 	return (
@@ -43,8 +44,10 @@ function App() {
 						<Route
 							index
 							element={
-								<ProtectedRoute>
-									<Home />
+								<ProtectedRoute paged={false}>
+									<CarritoProvider>
+										<Home />
+									</CarritoProvider>
 								</ProtectedRoute>
 							}
 						/>

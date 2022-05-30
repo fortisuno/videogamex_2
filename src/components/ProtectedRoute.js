@@ -5,7 +5,7 @@ import { useAuth } from "../providers/AuthProvider";
 import DataProvider from "../providers/DataProvider";
 import Loading from "../views/Loading";
 
-function ProtectedRoute({ requireAdmin = false, children }) {
+function ProtectedRoute({ requireAdmin = false, paged = true, children }) {
 	const { usuario, loading, isAdmin } = useAuth();
 
 	if (loading) return <Loading />;
@@ -14,7 +14,7 @@ function ProtectedRoute({ requireAdmin = false, children }) {
 
 	if (requireAdmin && !isAdmin) return <Navigate to="/" replace />;
 
-	return <DataProvider paged={true}>{children}</DataProvider>;
+	return <DataProvider paged={paged}>{children}</DataProvider>;
 }
 
 ProtectedRoute.propTypes = {

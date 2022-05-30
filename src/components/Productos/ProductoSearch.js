@@ -56,7 +56,7 @@ function ProductoSearch({ disableAddButton = true }) {
 	return (
 		<Toolbar
 			disableGutters
-			sx={{ p: 3, gap: 3, alignItems: "start" }}
+			sx={{ py: 3, px: disableAddButton ? 0 : 3, gap: 3, alignItems: "start" }}
 			component="form"
 			onSubmit={handleSubmit}
 		>
