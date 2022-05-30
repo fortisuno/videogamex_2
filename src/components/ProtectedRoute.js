@@ -2,6 +2,7 @@ import PropTypes from "prop-types";
 import React from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../providers/AuthProvider";
+import DataProvider from "../providers/DataProvider";
 import Loading from "../views/Loading";
 
 function ProtectedRoute({ requireAdmin = false, children }) {
@@ -13,7 +14,7 @@ function ProtectedRoute({ requireAdmin = false, children }) {
 
 	if (requireAdmin && !isAdmin) return <Navigate to="/" replace />;
 
-	return children;
+	return <DataProvider paged={true}>{children}</DataProvider>;
 }
 
 ProtectedRoute.propTypes = {

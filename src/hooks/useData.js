@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
 
-export function useTable() {
+export function useData(props = { paged: false }) {
 	const [data, setData] = useState([]);
 	const [page, setPage] = useState(0);
 	const [rowsPerPage, setRowsPerPage] = useState(5);
@@ -8,6 +8,7 @@ export function useTable() {
 
 	const loadData = useCallback(
 		async (callback, props = {}) => {
+			setLoading(true);
 			try {
 				const result = await callback(props);
 				setData(result.data);
@@ -38,11 +39,11 @@ export function useTable() {
 	};
 
 	return {
-		data: data.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage),
-		loading,
+		data: props.paged ? data.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage) : data,
 		setData,
-		resetData,
+		loading,
 		loadData,
+		resetData,
 		setLoading,
 		pagination: {
 			rowsPerPageOptions: [5, 10, 25],

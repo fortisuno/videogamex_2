@@ -115,12 +115,7 @@ function Login() {
 						size="large"
 						sx={{ width: "200px" }}
 					>
-						{/* Iniciar sesión */}
-						{isSubmitting ? (
-							<CircularProgress size={24} sx={{ color: "#fff" }} />
-						) : (
-							"Iniciar sesión"
-						)}
+						"Iniciar sesión"
 					</LoadingButton>
 				</Box>
 			</Stack>

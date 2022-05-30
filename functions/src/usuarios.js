@@ -14,14 +14,11 @@ exports.getUsuarios = functions.https.onCall(async (data, context) => {
 			const content = doc.data();
 			return {
 				id: doc.id,
-				content: {
-					titulo: content.titulo,
-					nombreCompleto: `${content.nombre} ${content.apellidoPaterno} ${content.apellidoMaterno}`,
-					role: content.role
-				}
+				displayName: content.displayName,
+				role: content.role
 			};
 		});
-		return snapshotData;
+		return snapshotData.filter((item) => item.id !== context.auth.uid);
 	} catch (error) {
 		throw error;
 	}
@@ -35,7 +32,7 @@ exports.getUsuarioDetalle = functions.https.onCall(async (data, context) => {
 			throw new functions.https.HttpsError("not-found", "El Id proporcionado no existe");
 		}
 		const snapshotData = snapshot.data();
-		return { id: snapshot.id, content: snapshotData };
+		return { id: snapshot.id, ...snapshotData };
 	} catch (error) {
 		throw error;
 	}
@@ -43,15 +40,16 @@ exports.getUsuarioDetalle = functions.https.onCall(async (data, context) => {
 
 exports.addUsuario = functions.https.onCall(async (data, context) => {
 	try {
-		const userRecord = await auth.createUser({
-			uid: data.id,
-			password: data.password,
-			email: data.content.email,
-			phoneNumber: data.content.phoneNumber,
-			displayName: data.content.displayName
-		});
+		const { id, password, ...content } = data;
+
+		const user = { uid: data.id, password: data.password, email: data.email };
+		if (data.phoneNumber.length > 0) user.phoneNumber = data.phoneNumber;
+		if (data.displayName.length > 0) user.displayName = data.displayName;
+
+		const userRecord = await auth.createUser(user);
 		const docRef = firestore.collection("usuarios").doc(userRecord.uid);
-		return await docRef.set(data.content);
+		await docRef.set(content);
+		return `El usuario ${data.id} ah sido creado`;
 	} catch (error) {
 		if (error.code.match(/^auth\//g)) {
 			let message = "";
@@ -82,6 +80,7 @@ exports.addUsuario = functions.https.onCall(async (data, context) => {
 
 exports.updateUsuario = functions.https.onCall(async (data, context) => {
 	try {
+		const { id, ...content } = data;
 		const docRef = firestore.collection("usuarios").doc(data.id);
 		const snapshot = await docRef.get();
 
@@ -89,15 +88,16 @@ exports.updateUsuario = functions.https.onCall(async (data, context) => {
 			throw new functions.https.HttpsError("not-found", "El Id proporcionado no existe");
 		}
 
-		if (!!data.content.email || !!data.content.phoneNumber || !!data.content.displayName) {
-			await auth.updateUser(data.id, {
-				email: data.content.email,
-				phoneNumber: data.content.phoneNumber,
-				displayName: data.content.displayName
-			});
+		const user = {};
+		if (!!data.email) user.email = data.email;
+		if (!!data.phoneNumber) user.phoneNumber = data.phoneNumber;
+		if (!!data.displayName) user.displayName = data.displayName;
+		if (Object.keys(user).length > 0) {
+			await auth.updateUser(data.id, user);
 		}
 
-		return await docRef.update(data.content);
+		await docRef.update(content);
+		return `El usuario ${data.id} ah sido actualizado`;
 	} catch (error) {
 		if (error.code.match(/^auth\//g)) {
 			let message = "";
@@ -133,7 +133,8 @@ exports.deleteUsuario = functions.https.onCall(async (data, context) => {
 		if (!snapshot.exists) {
 			throw new functions.https.HttpsError("not-found", "El Id proporcionado no existe");
 		}
-		return await auth.deleteUser(data.id);
+		await auth.deleteUser(data.id);
+		return `El usuario ${data.id} ha sido eliminado`;
 	} catch (error) {
 		throw error;
 	}

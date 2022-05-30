@@ -2,7 +2,7 @@ import { Dialog } from "@mui/material";
 import React from "react";
 import { useMultiDialog } from "../providers/MultiDialogProvider";
 
-function MultiDialog({ components, children }) {
+function MultiDialog({ components, children, callback }) {
 	const { dialog, closeDialog } = useMultiDialog();
 
 	const DetalleComponent = components[0] || "div";
@@ -16,7 +16,7 @@ function MultiDialog({ components, children }) {
 			sx={{ [`& .MuiDialog-paper`]: { borderRadius: 3 } }}
 			fullWidth
 		>
-			{dialog.mode === "detalle" ? <DetalleComponent /> : <EditComponent />}
+			{dialog.mode === "detalle" ? <DetalleComponent /> : <EditComponent reload={callback} />}
 		</Dialog>
 	);
 }

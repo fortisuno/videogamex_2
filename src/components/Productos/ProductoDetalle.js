@@ -10,26 +10,27 @@ import {
 	ListItemText
 } from "@mui/material";
 import moment from "moment";
-import React from "react";
+import React, { useEffect } from "react";
 import { useMultiDialog } from "../../providers/MultiDialogProvider";
+import { emptyProducto } from "../../utils/empy-entities";
 import LoadAnimation from "../LoadAnimation";
 import NoImage from "../NoImage";
 
 function ProductoDetalle() {
 	const { dialog, closeDialog, openDialog, stopLoading } = useMultiDialog();
+	const { data, loading } = dialog;
 
-	const content = dialog.data;
-
-	const showForm = () => {
-		openDialog("editar");
+	const updateData = () => {
+		openDialog("editar", data);
 		stopLoading();
 	};
 
-	const fechaLanzamiento = !!content ? moment(content.fechaLanzamiento).format("DD/MM/YYYY") : "";
+	const fechaLanzamiento =
+		data.fechaLanzamiento.length > 0 ? moment(data.fechaLanzamiento).format("DD/MM/YYYY") : "";
 
 	return (
 		<Box width="100%" position="relative">
-			{dialog.loading && <LoadAnimation />}
+			{loading && <LoadAnimation />}
 			<DialogTitle>Producto detalle</DialogTitle>
 			<DialogContent>
 				<Box
@@ -41,28 +42,23 @@ function ProductoDetalle() {
 					}}
 				>
 					<Box>
-						{!!content && content.imagen.length > 0 ? (
-							<img src={content.imagen} alt={content.id} style={{ width: "100%" }} />
-						) : (
-							<NoImage />
-						)}
+						<img
+							onError={(e) => (e.target.src = "/imagen-no-disponible.jpg")}
+							src={data.imagen}
+							alt={data.id}
+							style={{ width: "100%" }}
+						/>
 					</Box>
 					<Box sx={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)" }}>
 						<List>
 							<ListItem>
-								<ListItemText primary="Id" secondary={!!content.id ? content.id : ""} />
+								<ListItemText primary="Id" secondary={data.id} />
 							</ListItem>
 							<ListItem>
-								<ListItemText
-									primary="Titulo"
-									secondary={!!content ? content.titulo : ""}
-								/>
+								<ListItemText primary="Titulo" secondary={data.titulo} />
 							</ListItem>
 							<ListItem>
-								<ListItemText
-									primary="Desarrolladora"
-									secondary={!!content ? content.desarrolladora : ""}
-								/>
+								<ListItemText primary="Desarrolladora" secondary={data.desarrolladora} />
 							</ListItem>
 							<ListItem>
 								<ListItemText primary="Lanzamiento" secondary={fechaLanzamiento} />
@@ -70,18 +66,15 @@ function ProductoDetalle() {
 						</List>
 						<List>
 							<ListItem>
-								<ListItemText
-									primary="Categoría"
-									secondary={!!content ? content.categoria.titulo : ""}
-								/>
+								<ListItemText primary="Categoría" secondary={data.categoria.titulo} />
 							</ListItem>
 							<ListItem>
-								<ListItemText primary="Stock" secondary={!!content ? content.stock : ""} />
+								<ListItemText primary="Stock" secondary={data.stock} />
 							</ListItem>
 							<ListItem>
 								<ListItemText
 									primary="Precio"
-									secondary={`$ ${(!!content ? content.precio : 0).toFixed(2)}`}
+									secondary={`$ ${parseFloat(data.precio).toFixed(2)}`}
 								/>
 							</ListItem>
 						</List>
@@ -92,7 +85,7 @@ function ProductoDetalle() {
 				<Button startIcon={<Close />} color="error" onClick={closeDialog}>
 					Cerrar
 				</Button>
-				<Button startIcon={<Edit />} onClick={showForm}>
+				<Button startIcon={<Edit />} onClick={updateData}>
 					Editar
 				</Button>
 			</DialogActions>

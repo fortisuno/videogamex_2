@@ -13,9 +13,11 @@ import { useFormik } from "formik";
 import React, { useCallback, useEffect, useState } from "react";
 import { useFunctions } from "../../hooks/useFunctions";
 import validator from "validator";
+import { useMultiDialog } from "../../providers/MultiDialogProvider";
 
 function ProductoSearch() {
 	const [categorias, setCategorias] = useState([]);
+	const { openDialog, stopLoading } = useMultiDialog();
 	const { getCategorias } = useFunctions();
 	const { isAlphanumeric, isEmpty } = validator;
 
@@ -45,6 +47,11 @@ function ProductoSearch() {
 	useEffect(() => {
 		loadCategorias();
 	}, [loadCategorias]);
+
+	const handleOpenDialog = () => {
+		openDialog("agregar");
+		stopLoading();
+	};
 
 	return (
 		<Toolbar
@@ -101,6 +108,7 @@ function ProductoSearch() {
 						width: "55.97px",
 						p: 0
 					}}
+					onClick={handleOpenDialog}
 				>
 					<Add />
 				</Button>

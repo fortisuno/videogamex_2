@@ -13,11 +13,11 @@ import { useFormik } from "formik";
 import React, { useCallback, useEffect, useState } from "react";
 import { useFunctions } from "../../hooks/useFunctions";
 import validator from "validator";
+import { useMultiDialog } from "../../providers/MultiDialogProvider";
 
 function UsuarioSearch() {
-	const [Usuarios, setUsuarios] = useState([]);
-	const { getUsuarios } = useFunctions();
 	const { isAlphanumeric, isEmpty } = validator;
+	const { openDialog, stopLoading } = useMultiDialog();
 
 	const { values, touched, errors, handleSubmit, handleChange } = useFormik({
 		initialValues: { search: "", Usuario: "todas" },
@@ -33,18 +33,10 @@ function UsuarioSearch() {
 		}
 	});
 
-	const loadUsuarios = useCallback(async () => {
-		try {
-			const result = await getUsuarios({});
-			setUsuarios(result.data);
-		} catch (error) {
-			console.log(error);
-		}
-	}, [setUsuarios]);
-
-	useEffect(() => {
-		loadUsuarios();
-	}, [loadUsuarios]);
+	const handleOpenDialog = () => {
+		openDialog("agregar");
+		stopLoading();
+	};
 
 	return (
 		<Toolbar
@@ -86,6 +78,7 @@ function UsuarioSearch() {
 						width: "55.97px",
 						p: 0
 					}}
+					onClick={handleOpenDialog}
 				>
 					<Add />
 				</Button>

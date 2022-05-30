@@ -6,35 +6,26 @@ import CategoriaDetalle from "../../components/Categorias/CategoriaDetalle";
 import CategoriaForm from "../../components/Categorias/CategoriaForm";
 import CategoriaRow from "../../components/Categorias/CategoriaRow";
 import CategoriaSearch from "../../components/Categorias/CategoriaSearch";
-import { useDialog } from "../../hooks/useDialog";
 import { useFunctions } from "../../hooks/useFunctions";
 import { useTable } from "../../hooks/useTable";
 import MultiDialogProvider from "../../providers/MultiDialogProvider";
+import { useData } from "../../hooks/useData";
+import { emptyCategoria } from "../../utils/empy-entities";
+import { useDataContext } from "../../providers/DataProvider";
 
 function Categorias() {
-	const { data, setData, loading, setLoading, pagination } = useTable();
+	const { data, loading, pagination, loadData, resetData } = useDataContext();
 	const { getCategorias } = useFunctions();
 
-	const loadData = useCallback(async () => {
-		try {
-			const result = await getCategorias({});
-			setData(result.data);
-		} catch (error) {}
-		setTimeout(() => {
-			setLoading(false);
-		}, 500);
-	}, [setLoading, setData]);
-
 	useEffect(() => {
-		loadData();
+		loadData(getCategorias);
 		return () => {
-			setData([]);
-			setLoading(true);
+			resetData();
 		};
-	}, [loadData]);
+	}, [loadData, resetData]);
 
 	return (
-		<MultiDialogProvider>
+		<MultiDialogProvider initialValue={emptyCategoria}>
 			<Typography variant="h3">Categorias</Typography>
 			<Paper sx={{ width: "100%", position: "relative", borderRadius: 3 }} elevation={4}>
 				<CategoriaSearch />
@@ -44,7 +35,7 @@ function Categorias() {
 					pagination={pagination}
 				>
 					{data.map((content) => (
-					<CategoriaRow key= {content.id} id= {content.id} {...content} />	
+						<CategoriaRow key={content.id} {...content} />
 					))}
 				</DataTable>
 			</Paper>

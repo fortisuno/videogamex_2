@@ -58,7 +58,10 @@ exports.addProducto = functions.https.onCall(async (data, context) => {
 		const snapshot = await docRef.get();
 
 		if (snapshot.exists) {
-			throw new functions.https.HttpsError("already-exists", "El Id proporcionado ya existe");
+			throw new functions.https.HttpsError(
+				"already-exists",
+				`Este titulo ya está registrado con el id ${data.id}`
+			);
 		}
 		const { categoria } = data;
 		const categorias = firestore.collection("categorias").doc(categoria.id);
@@ -110,7 +113,8 @@ exports.updateProducto = functions.https.onCall(async (data, context) => {
 
 			if (newRef.exists) {
 				throw new functions.https.HttpsError(
-					`already-exists", "El producto ${data.titulo} ya existe`
+					"already-exists",
+					`El producto ${data.titulo} ya existe`
 				);
 			}
 
@@ -141,12 +145,12 @@ exports.updateProducto = functions.https.onCall(async (data, context) => {
 
 			batch.commit();
 
-			await currentRef.delete();
-			await newRef.set({ ...productoData, ...content });
+			await snapshotCurrent.delete();
+			await snapshotNew.set({ ...productoData, ...content });
 			message = `El producto ${data.id} a sido actualizado a ${data.newId}.`;
 		} else {
 			const { id, ...content } = data;
-			await currentRef.update(content);
+			await snapshotCurrent.update(content);
 			message = `El producto ${data.id} a sido actualizado.`;
 		}
 		return message;
@@ -162,7 +166,8 @@ exports.deleteProducto = functions.https.onCall(async (data, context) => {
 		if (!snapshot.exists) {
 			throw new functions.https.HttpsError("not-found", "El Id proporcionado no existe");
 		}
-		return await docRef.delete();
+		await docRef.delete();
+		return `El producto ${data.id} ha sido eliminado`;
 	} catch (error) {
 		throw error;
 	}

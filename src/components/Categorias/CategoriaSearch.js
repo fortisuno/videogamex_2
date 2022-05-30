@@ -13,17 +13,17 @@ import { useFormik } from "formik";
 import React, { useCallback, useEffect, useState } from "react";
 import { useFunctions } from "../../hooks/useFunctions";
 import validator from "validator";
+import { useMultiDialog } from "../../providers/MultiDialogProvider";
 
 function CategoriaSearch() {
-	const [categorias, setCategorias] = useState([]);
-	const { getCategorias } = useFunctions();
 	const { isAlphanumeric, isEmpty } = validator;
+	const { openDialog, stopLoading } = useMultiDialog();
 
 	const { values, touched, errors, handleSubmit, handleChange } = useFormik({
-		initialValues: { search: "", categoria: "todas" },
+		initialValues: { search: "" },
 		validate: ({ search }) => {
 			const errors = {};
-			if (!isEmpty(search) && !isAlphanumeric(search, "es-ES", { ignore: " :" })) {
+			if (!isEmpty(search) && !isAlphanumeric(search, "es-ES", { ignore: " :-" })) {
 				errors.search = "Introducir solo caracteres alfanuméricos";
 			}
 			return errors;
@@ -33,18 +33,10 @@ function CategoriaSearch() {
 		}
 	});
 
-	const loadCategorias = useCallback(async () => {
-		try {
-			const result = await getCategorias({});
-			setCategorias(result.data);
-		} catch (error) {
-			console.log(error);
-		}
-	}, [setCategorias]);
-
-	useEffect(() => {
-		loadCategorias();
-	}, [loadCategorias]);
+	const handleOpenDialog = () => {
+		openDialog("agregar");
+		stopLoading();
+	};
 
 	return (
 		<Toolbar
@@ -76,21 +68,6 @@ function CategoriaSearch() {
 					}}
 				/>
 			</Box>
-			<TextField
-				name="categoria"
-				label="Categoría"
-				value={values.categoria}
-				onChange={handleChange}
-				select
-				sx={{ width: "200px" }}
-			>
-				<MenuItem value="todas">Todas</MenuItem>
-				{categorias.map((content) => (
-					<MenuItem value={content.id} key={content.id}>
-						{content.titulo}
-					</MenuItem>
-				))}
-			</TextField>
 			<Tooltip title="Agregar Categoria">
 				<Button
 					variant="contained"
@@ -101,6 +78,7 @@ function CategoriaSearch() {
 						width: "55.97px",
 						p: 0
 					}}
+					onClick={handleOpenDialog}
 				>
 					<Add />
 				</Button>

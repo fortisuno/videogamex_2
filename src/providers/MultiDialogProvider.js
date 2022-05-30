@@ -2,17 +2,16 @@ import React, { createContext, useCallback, useContext, useState } from "react";
 
 const MultiDialogContext = createContext();
 
-function MultiDialogProvider({ children }) {
+function MultiDialogProvider({ initialValue, children }) {
 	const [dialog, setDialog] = useState({
-		id: "",
 		mode: "",
-		data: {},
+		data: initialValue,
 		open: false,
 		loading: true
 	});
 
-	const openDialog = (mode = "detalle") => {
-		setDialog({ ...dialog, mode, open: true, loading: true });
+	const openDialog = (mode = "detalle", content = initialValue) => {
+		setDialog({ data: content, open: true, loading: true, mode });
 	};
 
 	const closeDialog = (event, reason) => {

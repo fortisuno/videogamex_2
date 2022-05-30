@@ -15,9 +15,16 @@ exports.setUserClaim = functions.firestore.document("/usuarios/{id}").onCreate((
 exports.updateUserClaim = functions.firestore
 	.document("/usuarios/{id}")
 	.onUpdate((snap, context) => {
-		const data = snap.after.data();
-		auth.setCustomUserClaims(context.params.id, { admin: data.role === "admin" ? true : false });
-		console.log("El usuario " + context.params.id + " ah sido actualizado como " + data.role);
+		const beforeSnap = snap.before.data();
+		const afterSnap = snap.after.data();
+		if (beforeSnap.role !== afterSnap.role) {
+			auth.setCustomUserClaims(context.params.id, {
+				admin: afterSnap.role === "admin" ? true : false
+			});
+			console.log(
+				"El usuario " + context.params.id + " ah sido actualizado a " + afterSnap.role
+			);
+		}
 	});
 
 exports.deleteUserData = functions.auth.user().onDelete((user, context) => {

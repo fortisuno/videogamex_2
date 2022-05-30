@@ -1,5 +1,6 @@
 import { Close, Save } from "@mui/icons-material";
 import {
+	Alert,
 	Box,
 	Button,
 	DialogActions,
@@ -18,70 +19,118 @@ import { useMultiDialog } from "../../providers/MultiDialogProvider";
 import LoadAnimation from "../LoadAnimation";
 import validator from "validator";
 import moment from "moment";
-import { isEmpty } from "@firebase/util";
-
-const emptyForm = {
-	titulo: "",
-	categoría: { id: "", titulo: "" },
-	desarrolladora: "",
-	imagen: "",
-	fechaLanzamiento: "",
-	stock: 1,
-	precio: 1
-};
+import { LoadingButton } from "@mui/lab";
+import { getSlug } from "../../utils/helpers";
+import { useDataContext } from "../../providers/DataProvider";
 
 function ProductoForm() {
-	const { dialog, closeDialog, openDialog, loadData, stopLoading } = useMultiDialog();
-	const { id, content } = dialog.data;
-	const { matches } = validator;
+	const [feedback, setFeedback] = useState({});
+	const { dialog, closeDialog, openDialog, stopLoading } = useMultiDialog();
+	const { loadData } = useDataContext();
+	const { getProductos } = useFunctions();
+	const { data, loading, mode } = dialog;
+	const { id, ...content } = data;
+	const { isEmpty } = validator;
 
-	const { values, initialValues, touched, errors, handleChange, handleSubmit, setFieldValue } =
-		useFormik({
-			initialValues: dialog.mode === "agregar" ? emptyForm : content,
-			validate: (values) => {
-				const errors = {};
+	const {
+		values,
+		touched,
+		errors,
+		dirty,
+		isSubmitting,
+		handleChange,
+		handleSubmit,
+		setFieldValue
+	} = useFormik({
+		initialValues: content,
+		validate: (values) => {
+			const errors = {};
 
-				Object.keys(values).forEach((field) => {
-					const value =
-						typeof values[field] === "string" ? values[field] : String(values[field]);
+			Object.keys(values).forEach((field) => {
+				const value = typeof values[field] === "string" ? values[field] : String(values[field]);
 
-					if (
-						isEmpty(value) &&
-						(field === "titulo" || field === "stock" || field === "precio")
-					) {
-						errors[field] = "Campo requerido";
-					}
-				});
-
-				if (!values.fechaLanzamiento) {
-					errors.fechaLanzamiento = "Campo obligatorio";
-				} else if (!values.fechaLanzamiento.isValid()) {
-					errors.fechaLanzamiento = "Fecha no valida";
+				if (isEmpty(value) && (field === "titulo" || field === "stock" || field === "precio")) {
+					errors[field] = "Campo requerido";
 				}
-				return errors;
-			},
-			onSubmit: async (values) => {
-				try {
-					if (dialog.mode === "agregar") {
-						await addProducto(values);
-					}
-				} catch (error) {
-					console.log(error);
-				}
+			});
+
+			if (!values.fechaLanzamiento) {
+				errors.fechaLanzamiento = "Campo requerido";
+			} else if (!moment(values.fechaLanzamiento).isValid()) {
+				errors.fechaLanzamiento = "Fecha no valida";
 			}
-		});
+			return errors;
+		},
+		onSubmit: async (values) => {
+			try {
+				if (dialog.mode === "agregar") {
+					const id = getSlug(values.titulo);
+					const result = await addProducto({
+						...values,
+						id,
+						stock: parseInt(values.stock),
+						precio: parseFloat(values.precio)
+					});
+					setFeedback({ success: result.data });
+					setTimeout(async () => {
+						try {
+							closeDialog();
+							await loadData(getProductos);
+						} catch (error) {
+							console.log(error);
+						}
+					}, 1000);
+				} else if (dialog.mode === "editar") {
+					const changes = {};
+					Object.keys(values).forEach((field) => {
+						if (values[field] !== dialog.data[field]) {
+							changes[field] = values[field];
+						}
+					});
 
-	const [categorias, setCategorias] = useState([values.categoria]);
+					if (!!changes.titulo) {
+						changes.newId = getSlug(changes.titulo);
+					}
+
+					if (Object.keys(changes).length > 0) {
+						await updateProducto({ ...changes, id: data.id });
+						setFeedback({ success: "Producto actualizado correctamente" });
+						setTimeout(async () => {
+							try {
+								closeDialog();
+								await loadData(getProductos);
+							} catch (error) {
+								console.log(error);
+							}
+						}, 1000);
+					} else {
+						setFeedback({ warning: "No se encontraron cambios" });
+					}
+				}
+			} catch (error) {
+				setFeedback({ error: error.message || "Error al guardar" });
+			}
+		}
+	});
+
+	const [categorias, setCategorias] = useState([data.categoria]);
 	const { getCategorias, updateProducto, addProducto } = useFunctions();
 
 	const handleCancel = () => {
-		openDialog("detalle");
+		openDialog("detalle", data);
 		stopLoading();
+	};
+
+	const handleCategoria = ({ target }) => {
+		setFieldValue(
+			"categoria",
+			categorias.find((categoria) => categoria.id === target.value)
+		);
 	};
 
 	const loadCategorias = useCallback(async () => {
 		const result = await getCategorias({});
-		setCategorias(result.data.map((doc) => ({ id: doc.id, titulo: doc.content.titulo })));
+		setCategorias(result.data);
 	}, [setCategorias]);
 
 	useEffect(() => {
@@ -90,10 +139,8 @@ function ProductoForm() {
 
 	return (
 		<Box width="100%" position="relative" component="form" onSubmit={handleSubmit}>
-			{dialog.loading && <LoadAnimation />}
-			<DialogTitle>
-				{dialog.mode === "agregar" ? "Agregar Producto" : "Editar Producto"}
-			</DialogTitle>
+			{loading && <LoadAnimation />}
+			<DialogTitle>{mode === "agregar" ? "Agregar Producto" : "Editar Producto"}</DialogTitle>
 			<DialogContent>
 				<Grid container sx={{ py: 3 }} spacing={3}>
 					<Grid item xs>
@@ -115,7 +162,7 @@ function ProductoForm() {
 							value={values.categoria.id}
 							error={touched.categoria && !!errors.categoria}
 							helperText={touched.categoria && errors.categoria}
-							onChange={handleChange}
+							onChange={handleCategoria}
 							fullWidth
 						>
 							{categorias.map((categoria) => (
@@ -179,7 +226,7 @@ function ProductoForm() {
 							label="Fecha de lanzamiento"
 							value={values.fechaLanzamiento}
 							name={"fechaLanzamiento"}
-							onChange={(date) => setFieldValue("fechaLanzamiento", date)}
+							onChange={(date) => setFieldValue("fechaLanzamiento", moment(date).toDate())}
 							renderInput={(params) => (
 								<TextField
 									{...params}
@@ -191,19 +238,31 @@ function ProductoForm() {
 							)}
 						/>
 					</Grid>
+					<Grid item xs={12}>
+						{!!feedback.success && <Alert severity="success">{feedback.success}</Alert>}
+						{!!feedback.warning && <Alert severity="warning">{feedback.warning}</Alert>}
+						{!!feedback.error && <Alert severity="error">{feedback.error}</Alert>}
+					</Grid>
 				</Grid>
 			</DialogContent>
 			<DialogActions>
 				<Button
 					startIcon={<Close />}
 					color="error"
-					onClick={dialog.mode === "agregar" ? closeDialog : handleCancel}
+					disabled={isSubmitting || !!feedback.success}
+					onClick={mode === "agregar" ? closeDialog : handleCancel}
 				>
 					Cancelar
 				</Button>
-				<Button startIcon={<Save />} type="submit">
+				<LoadingButton
+					startIcon={<Save />}
+					loading={isSubmitting || !!feedback.success}
+					loadingPosition="start"
+					disabled={!dirty}
+					type="submit"
+				>
 					Guardar
-				</Button>
+				</LoadingButton>
 			</DialogActions>
 		</Box>
 	);

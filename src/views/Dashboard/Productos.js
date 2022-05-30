@@ -6,35 +6,30 @@ import ProductoDetalle from "../../components/Productos/ProductoDetalle";
 import ProductoForm from "../../components/Productos/ProductoForm";
 import ProductoRow from "../../components/Productos/ProductoRow";
 import ProductoSearch from "../../components/Productos/ProductoSearch";
-import { useDialog } from "../../hooks/useDialog";
+import { useData } from "../../hooks/useData";
 import { useFunctions } from "../../hooks/useFunctions";
 import { useTable } from "../../hooks/useTable";
+import { useDataContext } from "../../providers/DataProvider";
 import MultiDialogProvider from "../../providers/MultiDialogProvider";
+import { emptyProducto } from "../../utils/empy-entities";
 
 function Productos() {
-	const { data, setData, loading, setLoading, pagination } = useTable();
+	const { data, loading, pagination, loadData, resetData } = useDataContext();
 	const { getProductos } = useFunctions();
 
-	const loadData = useCallback(async () => {
-		try {
-			const result = await getProductos({});
-			setData(result.data);
-		} catch (error) {}
-		setTimeout(() => {
-			setLoading(false);
-		}, 500);
-	}, [setLoading, setData]);
-
 	useEffect(() => {
-		loadData();
+		loadData(getProductos);
 		return () => {
-			setData([]);
-			setLoading(true);
+			resetData();
 		};
-	}, [loadData]);
+	}, [loadData, resetData]);
+
+	const reloadData = useCallback(async () => {
+		await loadData(getProductos);
+	}, [loadData, resetData]);
 
 	return (
-		<MultiDialogProvider>
+		<MultiDialogProvider initialValue={emptyProducto}>
 			<Typography variant="h3">Productos</Typography>
 			<Paper sx={{ width: "100%", position: "relative", borderRadius: 3 }} elevation={4}>
 				<ProductoSearch />
@@ -44,7 +39,7 @@ function Productos() {
 					pagination={pagination}
 				>
 					{data.map((content) => (
-					<ProductoRow key= {content.id} id= {content.id} {...content} />	
+						<ProductoRow key={content.id} {...content} />
 					))}
 				</DataTable>
 			</Paper>

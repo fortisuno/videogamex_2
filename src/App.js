@@ -16,57 +16,77 @@ import { Chip } from "@mui/material";
 import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterMoment } from "@mui/x-date-pickers/AdapterMoment";
 import "moment/locale/es";
+import { ConfirmProvider } from "material-ui-confirm";
+import ResumenDeIngresos from "./views/Dashboard/ResumenDeIngresos";
 
 function App() {
 	return (
 		<LocalizationProvider dateAdapter={AdapterMoment} adapterLocale={"es-ES"}>
 			<AuthProvider>
-				<Routes>
-					<Route
-						index
-						element={
-							<ProtectedRoute>
-								<Home />
-							</ProtectedRoute>
-						}
-					/>
-					<Route
-						path="login"
-						element={
-							<RedirectIfLogged>
-								<Login />
-							</RedirectIfLogged>
-						}
-					/>
-					<Route
-						path="dashboard"
-						element={
-							<ProtectedRoute requireAdmin={true}>
-								<Dashboard />
-							</ProtectedRoute>
-						}
-					>
-						<Route index element={<Navigate to="productos" replace />} />
-						<Route path="productos" element={<Productos />} />
-						<Route path="categorias" element={<Categorias />} />
-						<Route path="usuarios" element={<Usuarios />} />
-						<Route path="historial-de-ventas" element={<HistorialDeVentas />} />
-					</Route>
-					<Route path="*" element={<NotFound />} />
-				</Routes>
-				<Chip
-					label="v0.2.2"
-					sx={{
-						position: "fixed",
-						bottom: 20,
-						left: 20,
-						bgcolor: "#111",
-						color: "white",
-						opacity: 0.8,
-						userSelect: "none",
-						zIndex: (theme) => theme.zIndex.drawer + 1
+				<ConfirmProvider
+					defaultOptions={{
+						title: "Advertencia",
+						description: "¿Está seguro que desea realizar esta acción?",
+						confirmationText: "Aceptar",
+						cancellationText: "Cancelar",
+						confirmationButtonProps: {
+							color: "primary"
+						},
+						cancellationButtonProps: {
+							color: "error"
+						},
+						confirmaText: "Aceptar",
+						cancelText: "Cancelar"
 					}}
-				/>
+				>
+					<Routes>
+						<Route
+							index
+							element={
+								<ProtectedRoute>
+									<Home />
+								</ProtectedRoute>
+							}
+						/>
+						<Route
+							path="login"
+							element={
+								<RedirectIfLogged>
+									<Login />
+								</RedirectIfLogged>
+							}
+						/>
+						<Route
+							path="dashboard"
+							element={
+								<ProtectedRoute requireAdmin={true}>
+									<Dashboard />
+								</ProtectedRoute>
+							}
+						>
+							<Route index element={<Navigate to="productos" replace />} />
+							<Route path="productos" element={<Productos />} />
+							<Route path="categorias" element={<Categorias />} />
+							<Route path="usuarios" element={<Usuarios />} />
+							<Route path="historial-de-ventas" element={<HistorialDeVentas />} />
+							<Route path="resumen-de-ingresos" element={<ResumenDeIngresos />} />
+						</Route>
+						<Route path="*" element={<NotFound />} />
+					</Routes>
+					<Chip
+						label="v0.2.2"
+						sx={{
+							position: "fixed",
+							bottom: 20,
+							left: 20,
+							bgcolor: "#111",
+							color: "white",
+							opacity: 0.8,
+							userSelect: "none",
+							zIndex: (theme) => theme.zIndex.drawer + 1
+						}}
+					/>
+				</ConfirmProvider>
 			</AuthProvider>
 		</LocalizationProvider>
 	);

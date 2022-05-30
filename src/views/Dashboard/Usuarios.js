@@ -9,42 +9,33 @@ import UsuarioSearch from "../../components/Usuarios/UsuarioSearch";
 import { useDialog } from "../../hooks/useDialog";
 import { useFunctions } from "../../hooks/useFunctions";
 import { useTable } from "../../hooks/useTable";
+import { useDataContext } from "../../providers/DataProvider";
 import MultiDialogProvider from "../../providers/MultiDialogProvider";
+import { emptyUsuario } from "../../utils/empy-entities";
 
 function Usuarios() {
-	const { data, setData, loading, setLoading, pagination } = useTable();
+	const { data, loading, pagination, loadData, resetData } = useDataContext();
 	const { getUsuarios } = useFunctions();
 
-	const loadData = useCallback(async () => {
-		try {
-			const result = await getUsuarios({});
-			setData(result.data);
-		} catch (error) {}
-		setTimeout(() => {
-			setLoading(false);
-		}, 500);
-	}, [setLoading, setData]);
-
 	useEffect(() => {
-		loadData();
+		loadData(getUsuarios);
 		return () => {
-			setData([]);
-			setLoading(true);
+			resetData();
 		};
-	}, [loadData]);
+	}, [loadData, resetData]);
 
 	return (
-		<MultiDialogProvider>
+		<MultiDialogProvider initialValue={emptyUsuario}>
 			<Typography variant="h3">Usuarios</Typography>
 			<Paper sx={{ width: "100%", position: "relative", borderRadius: 3 }} elevation={4}>
 				<UsuarioSearch />
 				<DataTable
-					headers={["Id", "Nombre_Completo", "Eliminar"]}
+					headers={["Id", "Nombre completo", "Role", "Eliminar"]}
 					loading={loading}
 					pagination={pagination}
 				>
 					{data.map((content) => (
-					<UsuarioRow key= {content.id} id= {content.id} {...content} />	
+						<UsuarioRow key={content.id} {...content} />
 					))}
 				</DataTable>
 			</Paper>

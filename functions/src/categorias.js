@@ -3,11 +3,25 @@ const { firestore } = require("../firebase-server");
 
 exports.getCategorias = functions.https.onCall(async (data, context) => {
 	try {
-		const allCollection = firestore.collection("categorias").orderBy("titulo");
-		const snapshot = await allCollection.get();
+		const querySnapshot = firestore.collection("categorias").orderBy("titulo");
+		const snapshot = await querySnapshot.get();
 
-		const snapshotData = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-		return snapshotData;
+		return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+	} catch (error) {
+		throw error;
+	}
+});
+
+exports.getCategoriaDetalle = functions.https.onCall(async (data, context) => {
+	try {
+		const docRef = firestore.collection("categorias").doc(data.id);
+		const snapshot = await docRef.get();
+
+		if (!snapshot.exists) {
+			throw new functions.https.HttpsError("not-found", "El Id proporcionado no existe");
+		}
+
+		return { id: snapshot.id, ...snapshot.data() };
 	} catch (error) {
 		throw error;
 	}
@@ -30,38 +44,39 @@ exports.addCategoria = functions.https.onCall(async (data, context) => {
 
 exports.updateCategoria = functions.https.onCall(async (data, context) => {
 	try {
-		const query = firestore.collection("categorias");
-		const snapshotCurrent = query.doc(data.id);
-		const snapshotNew = query.doc(data.newId);
-		const currentRef = await snapshotCurrent.get();
-		const newRef = await snapshotNew.get();
+		const collectionRef = firestore.collection("categorias");
+		const currentRef = collectionRef.doc(data.id);
+		const newRef = collectionRef.doc(data.newId);
+		const currentSnapshot = await currentRef.get();
+		const newSnapshot = await newRef.get();
 
-		if (!currentRef.exists) {
+		if (!currentSnapshot.exists) {
 			throw new functions.https.HttpsError("not-found", "El Id proporcionado no existe");
-		} else if (newRef.exists) {
+		} else if (newSnapshot.exists) {
 			throw new functions.https.HttpsError(
-				`already-exists", "La categoría ${data.titulo} ya existe`
+				"already-exists",
+				`La categoría ${data.titulo} ya existe`
 			);
 		}
 
-		const queryProductos = firestore.collection("productos");
-		const snapshotProductos = await queryProductos.where("categoria", "==", data.id).get();
+		const collectionProdutos = firestore.collection("productos");
+		const productosSnapshot = await collectionProdutos.where("categoria.id", "==", data.id).get();
 
 		const batch = firestore.batch();
 
-		snapshotProductos.forEach((doc) => {
-			const docRef = queryProductos.doc(doc.id);
+		productosSnapshot.forEach((doc) => {
+			const docRef = collectionProdutos.doc(doc.id);
 			batch.update(docRef, { categoria: { id: data.newId, titulo: data.titulo } });
 		});
 
 		await batch.commit();
 
-		const { id, ...content } = data;
+		const { id, newId, ...content } = data;
 
 		await currentRef.delete();
 		await newRef.set(content);
 
-		return `La categoría ${data.id.current} ha sido cambiada por ${data.id.new}`;
+		return `La categoría ${data.id} ha sido cambiada por ${data.newId}`;
 	} catch (error) {
 		throw error;
 	}

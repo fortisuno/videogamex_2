@@ -1,4 +1,4 @@
-import { Category, Group, Inventory, Sell } from "@mui/icons-material";
+import { Category, Group, Inventory, Sell, Summarize } from "@mui/icons-material";
 import { Box, Drawer, Toolbar, List, ListItemIcon, ListItemText, Typography } from "@mui/material";
 import React from "react";
 import SidebarListItem from "./SidebarListItem";
@@ -58,6 +58,12 @@ function Sidebar() {
 							<Sell />
 						</ListItemIcon>
 						<ListItemText primary="Historias de ventas" />
+					</SidebarListItem>
+					<SidebarListItem pathname="/dashboard/resumen-de-ingresos">
+						<ListItemIcon sx={{ color: "inherit" }}>
+							<Summarize />
+						</ListItemIcon>
+						<ListItemText primary="Resumen de ingresos" />
 					</SidebarListItem>
 				</List>
 			</Box>
