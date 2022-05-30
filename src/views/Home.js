@@ -1,4 +1,6 @@
 import {
+	Alert,
+	AlertTitle,
 	Box,
 	Button,
 	Container,
@@ -9,12 +11,22 @@ import {
 	ListItemText,
 	Stack,
 	TextField,
+	ToggleButton,
+	ToggleButtonGroup,
 	Toolbar,
 	Typography
 } from "@mui/material";
 import React, { useState } from "react";
 import Navbar from "../components/Navbar";
 import validator from "validator";
+import MultiDialogProvider from "../providers/MultiDialogProvider";
+import MultiDialog from "../components/MultiDialog";
+import UsuarioDetalle from "../components/Usuarios/UsuarioDetalle";
+import UsuarioForm from "../components/Usuarios/UsuarioForm";
+import { emptyProducto, emptyUsuario } from "../utils/empy-entities";
+import ProductoSearch from "../components/Productos/ProductoSearch";
+import ProductoForm from "../components/Productos/ProductoForm";
+import ProductoDetalle from "../components/Productos/ProductoDetalle";
 
 function Home() {
 	const [clientAmount, setClientAmount] = useState("");
@@ -26,6 +38,12 @@ function Home() {
 	const { isEmpty, matches } = validator;
 	const regExp = {
 		currency: /^[1-9][0-9]*$|^[1-9][0-9]*\.$|^[1-9][0-9]*\.[0-9]{1,2}$/g
+	};
+
+	const [metodoPago, setMetodoPago] = React.useState("efectivo");
+
+	const handleChange = (event, metodo) => {
+		setMetodoPago(metodo);
 	};
 
 	const handleClientAmount = ({ target }) => {
@@ -42,7 +60,10 @@ function Home() {
 
 	return (
 		<Box height="100vh" sx={{ display: "grid", gridTemplateRows: "auto 1fr" }}>
-			<Navbar />
+			<MultiDialogProvider initialValue={emptyUsuario}>
+				<Navbar />
+				<MultiDialog components={[UsuarioDetalle, UsuarioForm]} />
+			</MultiDialogProvider>
 			<Toolbar />
 			<Container maxWidth="xl" sx={{ height: "100%" }}>
 				<Stack
@@ -58,7 +79,19 @@ function Home() {
 					}
 					spacing={5}
 				>
-					<Box sx={{ flexGrow: 1 }}></Box>
+					<Box sx={{ flexGrow: 1 }}>
+						<MultiDialogProvider initialValue={emptyProducto}>
+							<ProductoSearch />
+							<MultiDialog components={[null, null]} />
+						</MultiDialogProvider>
+						<Alert
+							sx={{ maxWidth: "50%", mx: "auto", mt: 10, borderRadius: 3 }}
+							severity="warning"
+						>
+							<AlertTitle>Aviso</AlertTitle>
+							No hay datos registrados de este modulo
+						</Alert>
+					</Box>
 					<Stack sx={{ width: "300px", py: 5 }}>
 						<Typography variant="h4">Punto de venta</Typography>
 						<Stack mt="auto" spacing={1}>
@@ -76,6 +109,16 @@ function Home() {
 									inputProps: { sx: { textAlign: "end" } }
 								}}
 							/>
+							<ToggleButtonGroup
+								color="primary"
+								value={metodoPago}
+								exclusive
+								onChange={handleChange}
+								fullWidth
+							>
+								<ToggleButton value="tarjeta">Tarjeta</ToggleButton>
+								<ToggleButton value="efectivo">Efectivo</ToggleButton>
+							</ToggleButtonGroup>
 							<List style={{ marginBottom: "1rem" }}>
 								<ListItem
 									disablePadding={true}

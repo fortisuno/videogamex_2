@@ -13,64 +13,24 @@ import {
 import { grey } from "@mui/material/colors";
 import React, { useState } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
+import MultiDialog from "../components/MultiDialog";
+import NavbarDashboard from "../components/NavbarDashboard";
 import Sidebar from "../components/Sidebar";
+import UsuarioDetalle from "../components/Usuarios/UsuarioDetalle";
+import UsuarioForm from "../components/Usuarios/UsuarioForm";
 import { useAuth } from "../providers/AuthProvider";
+import MultiDialogProvider from "../providers/MultiDialogProvider";
+import { emptyUsuario } from "../utils/empy-entities";
 
 function Dashboard() {
-	const [anchorElUser, setAnchorElUser] = useState(null);
-	const { signout } = useAuth();
-	const navigate = useNavigate();
-
-	const handleOpenUserMenu = (event) => {
-		setAnchorElUser(event.currentTarget);
-	};
-
-	const handleCloseUserMenu = () => {
-		setAnchorElUser(null);
-	};
-
-	const handleSignOut = async () => {
-		await signout();
-	};
-
 	return (
 		<Box display={"flex"}>
 			<Sidebar />
 			<Box component="main" sx={{ flexGrow: 1, px: 10, color: grey[800] }}>
-				<Toolbar disableGutters sx={{ justifyContent: "end", gap: 3 }}>
-					<Button
-						variant="outlined"
-						color="primary"
-						onClick={() => navigate("/", { replace: true })}
-					>
-						Ir a la tienda
-					</Button>
-					<Tooltip title="Abrir ajustes">
-						<IconButton onClick={handleOpenUserMenu} variant="outlined" color="inherit">
-							<Settings />
-						</IconButton>
-					</Tooltip>
-					<Menu
-						sx={{ mt: "45px" }}
-						id="menu-appbar"
-						anchorEl={anchorElUser}
-						anchorOrigin={{
-							vertical: "top",
-							horizontal: "right"
-						}}
-						keepMounted
-						transformOrigin={{
-							vertical: "top",
-							horizontal: "right"
-						}}
-						open={Boolean(anchorElUser)}
-						onClose={handleCloseUserMenu}
-					>
-						<MenuItem onClick={handleSignOut}>
-							<Typography textAlign="center">Cerrar sesión</Typography>
-						</MenuItem>
-					</Menu>
-				</Toolbar>
+				<MultiDialogProvider initialValue={emptyUsuario}>
+					<NavbarDashboard />
+					<MultiDialog components={[UsuarioDetalle, UsuarioForm]} />
+				</MultiDialogProvider>
 				<Stack spacing={3} sx={{ pb: 8 }}>
 					<Outlet />
 				</Stack>

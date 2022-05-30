@@ -14,11 +14,15 @@ import {
 import { grey } from "@mui/material/colors";
 import React from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { useFunctions } from "../hooks/useFunctions";
 import { useAuth } from "../providers/AuthProvider";
+import { useMultiDialog } from "../providers/MultiDialogProvider";
 
 function Navbar(props) {
 	const [anchorElUser, setAnchorElUser] = React.useState(null);
-	const { isAdmin, signout } = useAuth();
+	const { openDialog, loadData } = useMultiDialog();
+	const { getUsuarioDetalle } = useFunctions();
+	const { isAdmin, signout, usuario } = useAuth();
 	const navigate = useNavigate();
 	const { pathname } = useLocation();
 
@@ -32,6 +36,12 @@ function Navbar(props) {
 
 	const handleSignOut = async () => {
 		await signout();
+	};
+
+	const handleShowDetalle = () => {
+		const { id } = usuario.data;
+		openDialog("detalle");
+		loadData(getUsuarioDetalle, id);
 	};
 
 	return (
@@ -92,6 +102,9 @@ function Navbar(props) {
 							open={Boolean(anchorElUser)}
 							onClose={handleCloseUserMenu}
 						>
+							<MenuItem onClick={handleShowDetalle}>
+								<Typography textAlign="center">Ver cuenta</Typography>
+							</MenuItem>
 							<MenuItem onClick={handleSignOut}>
 								<Typography textAlign="center">Cerrar sesión</Typography>
 							</MenuItem>

@@ -32,7 +32,7 @@ function Productos() {
 		<MultiDialogProvider initialValue={emptyProducto}>
 			<Typography variant="h3">Productos</Typography>
 			<Paper sx={{ width: "100%", position: "relative", borderRadius: 3 }} elevation={4}>
-				<ProductoSearch />
+				<ProductoSearch disableAddButton={false} />
 				<DataTable
 					headers={["Id", "Titulo", "Eliminar"]}
 					loading={loading}

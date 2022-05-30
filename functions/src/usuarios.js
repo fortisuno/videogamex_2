@@ -3,11 +3,7 @@ const { firestore, auth } = require("../firebase-server");
 
 exports.getUsuarios = functions.https.onCall(async (data, context) => {
 	try {
-		const docRef = firestore
-			.collection("usuarios")
-			.orderBy("nombre")
-			.orderBy("apellidoPaterno")
-			.orderBy("apellidoMaterno");
+		const docRef = firestore.collection("usuarios");
 		const snapshot = await docRef.get();
 
 		const snapshotData = snapshot.docs.map((doc) => {

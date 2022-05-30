@@ -1,4 +1,4 @@
-import { Paper, Typography } from "@mui/material";
+import { Alert, AlertTitle, Paper, Typography } from "@mui/material";
 import React, { useCallback, useEffect } from "react";
 import DataTable from "../../components/DataTable";
 import MultiDialog from "../../components/MultiDialog";
@@ -15,6 +15,10 @@ function HistorialDeVentas() {
 	return (
 		<MultiDialogProvider>
 			<Typography variant="h3">Historial de ventas</Typography>
+			<Alert sx={{ maxWidth: "50%", mx: "auto", mt: 10, borderRadius: 3 }} severity="warning">
+				<AlertTitle>Aviso</AlertTitle>
+				No hay datos registrados de este modulo
+			</Alert>
 		</MultiDialogProvider>
 	);
 }

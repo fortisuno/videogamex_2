@@ -15,7 +15,7 @@ import { useFunctions } from "../../hooks/useFunctions";
 import validator from "validator";
 import { useMultiDialog } from "../../providers/MultiDialogProvider";
 
-function ProductoSearch() {
+function ProductoSearch({ disableAddButton = true }) {
 	const [categorias, setCategorias] = useState([]);
 	const { openDialog, stopLoading } = useMultiDialog();
 	const { getCategorias } = useFunctions();
@@ -98,21 +98,23 @@ function ProductoSearch() {
 					</MenuItem>
 				))}
 			</TextField>
-			<Tooltip title="Agregar Producto">
-				<Button
-					variant="contained"
-					sx={{
-						borderRadius: 100,
-						height: "55.97px",
-						minWidth: "0px",
-						width: "55.97px",
-						p: 0
-					}}
-					onClick={handleOpenDialog}
-				>
-					<Add />
-				</Button>
-			</Tooltip>
+			{!disableAddButton && (
+				<Tooltip title="Agregar Producto">
+					<Button
+						variant="contained"
+						sx={{
+							borderRadius: 100,
+							height: "55.97px",
+							minWidth: "0px",
+							width: "55.97px",
+							p: 0
+						}}
+						onClick={handleOpenDialog}
+					>
+						<Add />
+					</Button>
+				</Tooltip>
+			)}
 		</Toolbar>
 	);
 }
