@@ -14,13 +14,13 @@ import React, { useCallback, useEffect, useState } from "react";
 import { useFunctions } from "../../hooks/useFunctions";
 import validator from "validator";
 
-function ProductoSearch() {
-	const [categorias, setCategorias] = useState([]);
-	const { getCategorias } = useFunctions();
+function UsuarioSearch() {
+	const [Usuarios, setUsuarios] = useState([]);
+	const { getUsuarios } = useFunctions();
 	const { isAlphanumeric, isEmpty } = validator;
 
 	const { values, touched, errors, handleSubmit, handleChange } = useFormik({
-		initialValues: { search: "", categoria: "todas" },
+		initialValues: { search: "", Usuario: "todas" },
 		validate: ({ search }) => {
 			const errors = {};
 			if (!isEmpty(search) && !isAlphanumeric(search, "es-ES", { ignore: " :" })) {
@@ -33,18 +33,18 @@ function ProductoSearch() {
 		}
 	});
 
-	const loadCategorias = useCallback(async () => {
+	const loadUsuarios = useCallback(async () => {
 		try {
-			const result = await getCategorias({});
-			setCategorias(result.data);
+			const result = await getUsuarios({});
+			setUsuarios(result.data);
 		} catch (error) {
 			console.log(error);
 		}
-	}, [setCategorias]);
+	}, [setUsuarios]);
 
 	useEffect(() => {
-		loadCategorias();
-	}, [loadCategorias]);
+		loadUsuarios();
+	}, [loadUsuarios]);
 
 	return (
 		<Toolbar
@@ -56,8 +56,8 @@ function ProductoSearch() {
 			<Box sx={{ flexGrow: 1 }}>
 				<TextField
 					name="search"
-					label="Buscar producto"
-					placeholder="Buscar por titulo"
+					label="Buscar Usuario"
+					placeholder="Buscar por nombre"
 					error={touched.search && !!errors.search}
 					helperText={touched.search && errors.search}
 					value={values.search}
@@ -66,7 +66,7 @@ function ProductoSearch() {
 					InputProps={{
 						endAdornment: (
 							<InputAdornment position="end">
-								<Tooltip title="Buscar producto">
+								<Tooltip title="Buscar Usuario">
 									<IconButton edge="end" type="submit">
 										<Search />
 									</IconButton>
@@ -76,22 +76,7 @@ function ProductoSearch() {
 					}}
 				/>
 			</Box>
-			<TextField
-				name="categoria"
-				label="Categoría"
-				value={values.categoria}
-				onChange={handleChange}
-				select
-				sx={{ width: "200px" }}
-			>
-				<MenuItem value="todas">Todas</MenuItem>
-				{categorias.map((content) => (
-					<MenuItem value={content.id} key={content.id}>
-						{content.titulo}
-					</MenuItem>
-				))}
-			</TextField>
-			<Tooltip title="Agregar Producto">
+			<Tooltip title="Agregar Usuario">
 				<Button
 					variant="contained"
 					sx={{
@@ -109,4 +94,4 @@ function ProductoSearch() {
 	);
 }
 
-export default ProductoSearch;
+export default UsuarioSearch;

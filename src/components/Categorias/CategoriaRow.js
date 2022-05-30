@@ -6,13 +6,13 @@ import ButtonCell from "../ButtonCell";
 import IconButtonCell from "../IconButtonCell";
 import TextCell from "../TextCell";
 
-function ProductoRow({ id, titulo, categoria }) {
+function CategoriaRow({ id, titulo, categoria }) {
 	const { openDialog, loadData } = useMultiDialog();
-	const { getProductoDetalle } = useFunctions();
+	const { getCategoriaDetalle } = useFunctions();
 
 	const handleShowDetalle = () => {
 		openDialog("detalle");
-		loadData(getProductoDetalle, id);
+		loadData(getCategoriaDetalle, id);
 	};
 
 	return (
@@ -24,4 +24,4 @@ function ProductoRow({ id, titulo, categoria }) {
 	);
 }
 
-export default ProductoRow;
+export default CategoriaRow;

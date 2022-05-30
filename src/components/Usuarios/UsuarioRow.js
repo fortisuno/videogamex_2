@@ -6,22 +6,22 @@ import ButtonCell from "../ButtonCell";
 import IconButtonCell from "../IconButtonCell";
 import TextCell from "../TextCell";
 
-function ProductoRow({ id, titulo, categoria }) {
+function UsuarioRow({ id, Nombre, Usuario }) {
 	const { openDialog, loadData } = useMultiDialog();
-	const { getProductoDetalle } = useFunctions();
+	const { getUsuarioDetalle } = useFunctions();
 
 	const handleShowDetalle = () => {
 		openDialog("detalle");
-		loadData(getProductoDetalle, id);
+		loadData(getUsuarioDetalle, id);
 	};
 
 	return (
 		<TableRow>
 			<ButtonCell text={id} callback={handleShowDetalle} />
-			<TextCell text={titulo} />
+			<TextCell text={Nombre} />
 			<IconButtonCell text={id} />
 		</TableRow>
 	);
 }
 
-export default ProductoRow;
+export default UsuarioRow;

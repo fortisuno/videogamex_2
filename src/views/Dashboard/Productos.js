@@ -39,12 +39,12 @@ function Productos() {
 			<Paper sx={{ width: "100%", position: "relative", borderRadius: 3 }} elevation={4}>
 				<ProductoSearch />
 				<DataTable
-					headers={["Id", "Titulo", "Categoría", "Eliminar"]}
+					headers={["Id", "Titulo", "Eliminar"]}
 					loading={loading}
 					pagination={pagination}
 				>
-					{data.map(({ id, content }) => (
-						<ProductoRow key={id} id={id} {...content} />
+					{data.map((content) => (
+					<ProductoRow key= {content.id} id= {content.id} {...content} />	
 					))}
 				</DataTable>
 			</Paper>

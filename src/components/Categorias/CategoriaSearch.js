@@ -14,7 +14,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import { useFunctions } from "../../hooks/useFunctions";
 import validator from "validator";
 
-function ProductoSearch() {
+function CategoriaSearch() {
 	const [categorias, setCategorias] = useState([]);
 	const { getCategorias } = useFunctions();
 	const { isAlphanumeric, isEmpty } = validator;
@@ -56,7 +56,7 @@ function ProductoSearch() {
 			<Box sx={{ flexGrow: 1 }}>
 				<TextField
 					name="search"
-					label="Buscar producto"
+					label="Buscar Categoria"
 					placeholder="Buscar por titulo"
 					error={touched.search && !!errors.search}
 					helperText={touched.search && errors.search}
@@ -66,7 +66,7 @@ function ProductoSearch() {
 					InputProps={{
 						endAdornment: (
 							<InputAdornment position="end">
-								<Tooltip title="Buscar producto">
+								<Tooltip title="Buscar Categoria">
 									<IconButton edge="end" type="submit">
 										<Search />
 									</IconButton>
@@ -91,7 +91,7 @@ function ProductoSearch() {
 					</MenuItem>
 				))}
 			</TextField>
-			<Tooltip title="Agregar Producto">
+			<Tooltip title="Agregar Categoria">
 				<Button
 					variant="contained"
 					sx={{
@@ -109,4 +109,4 @@ function ProductoSearch() {
 	);
 }
 
-export default ProductoSearch;
+export default CategoriaSearch;

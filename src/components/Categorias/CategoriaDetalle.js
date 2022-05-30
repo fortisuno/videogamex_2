@@ -15,7 +15,7 @@ import { useMultiDialog } from "../../providers/MultiDialogProvider";
 import LoadAnimation from "../LoadAnimation";
 import NoImage from "../NoImage";
 
-function ProductoDetalle() {
+function CategoriaDetalle() {
 	const { dialog, closeDialog, openDialog, stopLoading } = useMultiDialog();
 
 	const content = dialog.data;
@@ -25,12 +25,12 @@ function ProductoDetalle() {
 		stopLoading();
 	};
 
-	const fechaLanzamiento = !!content ? moment(content.fechaLanzamiento).format("DD/MM/YYYY") : "";
+    //const fechaLanzamiento = !!content ? moment(content.fechaLanzamiento).format("DD/MM/YYYY") : "";
 
 	return (
 		<Box width="100%" position="relative">
 			{dialog.loading && <LoadAnimation />}
-			<DialogTitle>Producto detalle</DialogTitle>
+			<DialogTitle>Categoria detalle</DialogTitle>
 			<DialogContent>
 				<Box
 					sx={{
@@ -58,15 +58,6 @@ function ProductoDetalle() {
 									secondary={!!content ? content.titulo : ""}
 								/>
 							</ListItem>
-							<ListItem>
-								<ListItemText
-									primary="Desarrolladora"
-									secondary={!!content ? content.desarrolladora : ""}
-								/>
-							</ListItem>
-							<ListItem>
-								<ListItemText primary="Lanzamiento" secondary={fechaLanzamiento} />
-							</ListItem>
 						</List>
 						<List>
 							<ListItem>
@@ -77,12 +68,6 @@ function ProductoDetalle() {
 							</ListItem>
 							<ListItem>
 								<ListItemText primary="Stock" secondary={!!content ? content.stock : ""} />
-							</ListItem>
-							<ListItem>
-								<ListItemText
-									primary="Precio"
-									secondary={`$ ${(!!content ? content.precio : 0).toFixed(2)}`}
-								/>
 							</ListItem>
 						</List>
 					</Box>
@@ -100,4 +85,4 @@ function ProductoDetalle() {
 	);
 }
 
-export default ProductoDetalle;
+export default CategoriaDetalle;
