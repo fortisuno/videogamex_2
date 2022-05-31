@@ -30,7 +30,7 @@ function ProductoRow({ id, titulo }) {
 					const result = await deleteProducto({ id });
 					console.log(result.data);
 					setDisabled(true);
-					await refresh(getProductos);
+					refresh(getProductos);
 				} catch (error) {
 					throw error;
 				}

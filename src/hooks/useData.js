@@ -6,9 +6,16 @@ export function useData(props = { paged: false }) {
 	const [rowsPerPage, setRowsPerPage] = useState(5);
 	const [loading, setLoading] = useState(true);
 
+	const resetData = useCallback(() => {
+		setData([]);
+		setLoading(true);
+		setPage(0);
+		setRowsPerPage(5);
+	}, [setData, setLoading, setPage, setRowsPerPage]);
+
 	const loadData = useCallback(
 		async (callback, props = {}) => {
-			setLoading(true);
+			resetData();
 			try {
 				const result = await callback(props);
 				setData(result.data);
@@ -19,15 +26,8 @@ export function useData(props = { paged: false }) {
 				setLoading(false);
 			}, 500);
 		},
-		[setLoading, setData]
+		[setLoading, setData, resetData]
 	);
-
-	const resetData = useCallback(() => {
-		setData([]);
-		setLoading(true);
-		setPage(0);
-		setRowsPerPage(5);
-	}, [setData, setLoading, setPage, setRowsPerPage]);
 
 	const handleChangePage = (event, newPage) => {
 		setPage(newPage);

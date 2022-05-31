@@ -24,3 +24,16 @@ export const emptyUsuario = {
 	phoneNumber: "",
 	role: "vendedor"
 };
+
+export const emptyVenta = {
+	id: "",
+	usuario: "",
+	productos: [],
+	total: 0,
+	pago: 0,
+	cambio: 0,
+	fecha: "",
+	mes: "",
+	anio: "",
+	metodoPago: ""
+};

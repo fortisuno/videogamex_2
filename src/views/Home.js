@@ -34,23 +34,29 @@ import { useDataContext } from "../providers/DataProvider";
 import { useFunctions } from "../hooks/useFunctions";
 import ProductoCard from "../components/Productos/ProductoCard";
 import ProductoThumbnail from "../components/Productos/ProductoThumbnail";
+import LoadAnimation from "../components/LoadAnimation";
+import { useAuth } from "../providers/AuthProvider";
+import { useConfirm } from "material-ui-confirm";
+import moment from "moment";
 
 function Home() {
-	const { carrito, setMetodoPago, setPago } = useCarrito();
-	const { data, loadData, resetData } = useDataContext();
+	const { carrito, setMetodoPago, setPago, setProductos } = useCarrito();
+	const { data, loadData, resetData, loading } = useDataContext();
 	const [clientAmount, setClientAmount] = useState("");
-	const { getProductos } = useFunctions();
+	const { usuario } = useAuth();
+	const confirm = useConfirm();
+	const { getProductos, addVenta } = useFunctions();
 	const [errors, setErrors] = useState({
 		clientAmount: "",
 		search: ""
 	});
 
 	useEffect(() => {
-		loadData(getProductos, { asCard: true });
+		loadData(getProductos, { asCard: true, inStock: true });
 		return () => {
 			resetData();
 		};
-	}, []);
+	}, [loadData, resetData]);
 
 	const { metodoPago } = carrito;
 
@@ -60,7 +66,9 @@ function Home() {
 	};
 
 	const handleChange = (event, metodo) => {
-		setMetodoPago(metodo);
+		if (!!metodo) {
+			setMetodoPago(metodo);
+		}
 	};
 
 	const handleClientAmount = ({ target }) => {
@@ -73,6 +81,38 @@ function Home() {
 		} else if (!isEmpty(errors.clientAmount)) {
 			setErrors({ ...errors, clientAmount: "" });
 		}
+	};
+
+	const handlePayment = () => {
+		confirm({ description: "¿Estás seguro de que deseas realizar la venta?" }).then(async () => {
+			try {
+				const fecha = moment();
+				const venta = {
+					...carrito,
+					productos: carrito.productos.map((producto) => {
+						const { stock, ...detalle } = producto;
+						return detalle;
+					}),
+					usuario: usuario.data.id,
+					fecha: fecha.toDate(),
+					mes: fecha.format("MM"),
+					anio: fecha.format("YYYY"),
+					id: fecha.format("DDMMYYYYhhmmss")
+				};
+				const result = await addVenta(venta);
+				console.log(result.data);
+			} catch (error) {
+				console.log(error);
+			}
+		});
+	};
+
+	const handleCancel = () => {
+		confirm({ description: "¿Estás seguro de que deseas cancelar la venta?" }).then(() => {
+			setMetodoPago("");
+			setPago(0);
+			setProductos([]);
+		});
 	};
 
 	return (
@@ -101,13 +141,20 @@ function Home() {
 							<ProductoSearch />
 							<MultiDialog components={[null, null]} />
 						</MultiDialogProvider>
-						<Grid container columns={5} spacing={4}>
-							{data.map((producto, index) => (
-								<Grid item xs={1} key={index}>
-									<ProductoCard {...producto} />
-								</Grid>
-							))}
-						</Grid>
+						<Box
+							sx={{
+								width: "100%",
+								display: "grid",
+								gridTemplateColumns: "repeat(5, 1fr)",
+								alignItems: "stretch",
+								position: "relative",
+								gap: 5
+							}}
+						>
+							{loading && <LoadAnimation />}
+							{!!data &&
+								data.map((producto, index) => <ProductoCard key={index} {...producto} />)}
+						</Box>
 					</Box>
 					<Stack sx={{ width: "300px", py: 5 }}>
 						<Typography variant="h4">Punto de venta</Typography>
@@ -170,7 +217,8 @@ function Home() {
 							<Button
 								variant="contained"
 								size="large"
-								disabled={carrito.productos.length === 0}
+								disabled={carrito.productos.length === 0 || carrito.total > carrito.pago}
+								onClick={handlePayment}
 								fullWidth
 							>
 								Pagar
@@ -180,6 +228,7 @@ function Home() {
 								color="error"
 								size="large"
 								disabled={carrito.productos.length === 0}
+								onClick={handleCancel}
 								fullWidth
 							>
 								Cancelar

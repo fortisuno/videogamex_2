@@ -38,8 +38,8 @@ function Productos() {
 					loading={loading}
 					pagination={pagination}
 				>
-					{data.map((content) => (
-						<ProductoRow key={content.id} {...content} />
+					{data.map((content, idx) => (
+						<ProductoRow key={idx} {...content} />
 					))}
 				</DataTable>
 			</Paper>

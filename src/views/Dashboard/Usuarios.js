@@ -34,8 +34,8 @@ function Usuarios() {
 					loading={loading}
 					pagination={pagination}
 				>
-					{data.map((content) => (
-						<UsuarioRow key={content.id} {...content} />
+					{data.map((content, idx) => (
+						<UsuarioRow key={idx} {...content} />
 					))}
 				</DataTable>
 			</Paper>

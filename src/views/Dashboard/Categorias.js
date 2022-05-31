@@ -34,8 +34,8 @@ function Categorias() {
 					loading={loading}
 					pagination={pagination}
 				>
-					{data.map((content) => (
-						<CategoriaRow key={content.id} {...content} />
+					{data.map((content, idx) => (
+						<CategoriaRow key={idx} {...content} />
 					))}
 				</DataTable>
 			</Paper>

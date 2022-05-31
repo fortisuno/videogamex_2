@@ -1,16 +1,37 @@
-import { Alert, AlertTitle, Typography } from "@mui/material";
-import React from "react";
+import { Alert, AlertTitle, Paper, Typography } from "@mui/material";
+import React, { useEffect } from "react";
+import DataTable from "../../components/DataTable";
+import ResumenDeIngresosRow from "../../components/ResumenDeIngresos/ResumenDeIngresosRow";
+import { useFunctions } from "../../hooks/useFunctions";
+import { useDataContext } from "../../providers/DataProvider";
 import MultiDialogProvider from "../../providers/MultiDialogProvider";
 
 function ResumenDeIngresos() {
+	const { data, loading, pagination, loadData, resetData } = useDataContext();
+	const { getIngresos } = useFunctions();
+
+	useEffect(() => {
+		loadData(getIngresos);
+		return () => {
+			resetData();
+		};
+	}, [loadData, resetData]);
+
 	return (
-		<MultiDialogProvider>
+		<React.Fragment>
 			<Typography variant="h3">Resumen de ingresos</Typography>
-			<Alert sx={{ maxWidth: "50%", mx: "auto", mt: 10, borderRadius: 3 }} severity="warning">
-				<AlertTitle>Aviso</AlertTitle>
-				No hay datos registrados de este modulo
-			</Alert>
-		</MultiDialogProvider>
+			<Paper sx={{ width: "100%", position: "relative", borderRadius: 3 }} elevation={4}>
+				<DataTable
+					headers={["Fecha", "Total de venta"]}
+					loading={loading}
+					pagination={pagination}
+				>
+					{data.map((content, idx) => (
+						<ResumenDeIngresosRow key={idx} {...content} />
+					))}
+				</DataTable>
+			</Paper>
+		</React.Fragment>
 	);
 }
 

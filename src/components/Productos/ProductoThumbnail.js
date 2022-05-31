@@ -28,7 +28,7 @@ function ProductoThumbnail({ data }) {
 					onChange={({ target }) => updateItem(target.value, data.id)}
 					fullWidth
 					InputProps={{
-						inputProps: { min: 1 }
+						inputProps: { min: 1, max: data.stock }
 					}}
 				/>
 			</Box>

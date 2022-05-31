@@ -19,7 +19,7 @@ exports.getProductos = functions.https.onCall(async (data, context) => {
 		const snapshotData = snapshot.docs.map((doc) => {
 			const content = doc.data();
 
-			const producto = { titulo: content.titulo };
+			const producto = { titulo: content.titulo, stock: content.stock };
 
 			if (!!data.asCard) {
 				producto.precio = content.precio;

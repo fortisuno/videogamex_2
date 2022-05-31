@@ -44,3 +44,18 @@ exports.updateUserClaim = functions.firestore
 exports.deleteUserData = functions.auth.user().onDelete((user, context) => {
 	firestore.collection("usuarios").doc(user.uid).delete();
 });
+
+exports.decrementStock = functions.firestore
+	.document("/ventas/{id}")
+	.onCreate(async (snap, context) => {
+		const venta = snap.data();
+		const productos = venta.productos;
+		for (let i = 0; i < productos.length; i++) {
+			const producto = productos[i];
+			const docRef = firestore.collection("productos").doc(producto.id);
+			const snapshot = await docRef.get();
+			const snapshotData = snapshot.data();
+			const stock = snapshotData.stock - producto.cantidad;
+			await docRef.update({ stock });
+		}
+	});

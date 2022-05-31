@@ -69,7 +69,7 @@ function CarritoProvider({ children }) {
 
 	const ctx = {
 		carrito: { productos, total, pago, cambio, metodoPago },
-		setCarrito: setProductos,
+		setProductos,
 		setTotal,
 		setPago,
 		setCambio,

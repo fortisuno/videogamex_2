@@ -14,7 +14,7 @@ function ProtectedRoute({ requireAdmin = false, paged = true, children }) {
 
 	if (requireAdmin && !isAdmin) return <Navigate to="/" replace />;
 
-	return <DataProvider paged={paged}>{children}</DataProvider>;
+	return children;
 }
 
 ProtectedRoute.propTypes = {

@@ -3,7 +3,14 @@ import { Button, Card, CardActions, CardContent, CardMedia, Typography } from "@
 import React from "react";
 import { useCarrito } from "../../providers/CarritoProvider";
 
-function ProductoCard({ id, titulo, categoria, precio, imagen }) {
+function ProductoCard({
+	id = "",
+	titulo = "",
+	categoria = "",
+	precio = 0,
+	imagen = "",
+	stock = 0
+}) {
 	const { addToCarrito } = useCarrito();
 	return (
 		<Card elevation={0}>
@@ -36,7 +43,7 @@ function ProductoCard({ id, titulo, categoria, precio, imagen }) {
 					variant="contained"
 					startIcon={<AddShoppingCart />}
 					fullWidth
-					onClick={() => addToCarrito({ id, titulo, precio })}
+					onClick={() => addToCarrito({ id, titulo, precio, stock })}
 				>
 					Agregar
 				</Button>

@@ -23,6 +23,13 @@ export function useFunctions() {
 	const updateUsuario = httpsCallable(functions, "usuarios-updateUsuario");
 	const deleteUsuario = httpsCallable(functions, "usuarios-deleteUsuario");
 
+	// Ventas
+	const getVentas = httpsCallable(functions, "ventas-getVentas");
+	const getVentaDetalle = httpsCallable(functions, "ventas-getVentaDetalle");
+	const addVenta = httpsCallable(functions, "ventas-addVenta");
+	const deleteVenta = httpsCallable(functions, "ventas-deleteVenta");
+	const getIngresos = httpsCallable(functions, "ventas-getResumen");
+
 	return {
 		getProductos,
 		getProductoDetalle,
@@ -38,6 +45,11 @@ export function useFunctions() {
 		getUsuarioDetalle,
 		addUsuario,
 		updateUsuario,
-		deleteUsuario
+		deleteUsuario,
+		getVentas,
+		getVentaDetalle,
+		addVenta,
+		deleteVenta,
+		getIngresos
 	};
 }

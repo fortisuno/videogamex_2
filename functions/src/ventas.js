@@ -10,11 +10,8 @@ exports.getVentas = functions.https.onCall(async (data, context) => {
 			const content = doc.data();
 			return {
 				id: doc.id,
-				content: {
-					usuario: content.usuario,
-					metodo: content.metodoPago,
-					total: content.total
-				}
+				usuario: content.usuario,
+				total: content.total
 			};
 		});
 		return snapshotData;
@@ -23,7 +20,7 @@ exports.getVentas = functions.https.onCall(async (data, context) => {
 	}
 });
 
-exports.getVentasDetalle = functions.https.onCall(async (data, context) => {
+exports.getVentaDetalle = functions.https.onCall(async (data, context) => {
 	try {
 		const docRef = firestore.collection("ventas").doc(data.id);
 		const snapshot = await docRef.get();
@@ -31,7 +28,7 @@ exports.getVentasDetalle = functions.https.onCall(async (data, context) => {
 			throw new functions.https.HttpsError("not-found", "El Id proporcionado no existe");
 		}
 		const snapshotData = snapshot.data();
-		return { id: snapshot.id, content: snapshotData };
+		return { id: snapshot.id, ...snapshotData };
 	} catch (error) {
 		throw error;
 	}
@@ -39,7 +36,8 @@ exports.getVentasDetalle = functions.https.onCall(async (data, context) => {
 
 exports.addVenta = functions.https.onCall(async (data, context) => {
 	try {
-		await firestore.collection("ventas").doc(data.id).set(data.content);
+		const { id, ...content } = data;
+		await firestore.collection("ventas").doc(data.id).set(content);
 
 		return "Venta Realizada";
 	} catch (error) {
@@ -55,6 +53,22 @@ exports.deleteVenta = functions.https.onCall(async (data, context) => {
 			throw new functions.https.HttpsError("not-found", "El Id proporcionado no existe");
 		}
 		return await docRef.delete();
+	} catch (error) {
+		throw error;
+	}
+});
+
+exports.getResumen = functions.https.onCall(async (data, context) => {
+	try {
+		const docRef = firestore.collection("ventas");
+		const snapshot = await docRef.get();
+
+		const snapshotData = snapshot.docs.map((doc) => doc.data());
+		const ingresos = {};
+		snapshotData.forEach((venta) => {
+			ingresos[venta.anio] = (ingresos[venta.anio] || 0) + venta.total;
+		});
+		return Object.entries(ingresos).map(([anio, total]) => ({ anio, total }));
 	} catch (error) {
 		throw error;
 	}
