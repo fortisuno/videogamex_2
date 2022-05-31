@@ -100,6 +100,7 @@ function Home() {
 					id: fecha.format("DDMMYYYYhhmmss")
 				};
 				const result = await addVenta(venta);
+				loadData(getProductos, { asCard: true, inStock: true });
 				console.log(result.data);
 			} catch (error) {
 				console.log(error);
