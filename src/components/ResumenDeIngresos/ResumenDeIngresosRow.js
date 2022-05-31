@@ -3,7 +3,7 @@ import React from "react";
 import ButtonCell from "../ButtonCell";
 import TextCell from "../TextCell";
 
-function ResumenDeIngresosRow({ anio, total }) {
+function ResumenDeIngresosRow({ anio, total = 0 }) {
 	return (
 		<TableRow>
 			<TextCell text={anio} />

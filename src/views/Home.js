@@ -83,6 +83,14 @@ function Home() {
 		}
 	};
 
+	const handleCancel = () => {
+		confirm({ description: "¿Estás seguro de que deseas cancelar la venta?" }).then(() => {
+			setMetodoPago("");
+			setPago(0);
+			setProductos([]);
+		});
+	};
+
 	const handlePayment = () => {
 		confirm({ description: "¿Estás seguro de que deseas realizar la venta?" }).then(async () => {
 			try {
@@ -101,18 +109,13 @@ function Home() {
 				};
 				const result = await addVenta(venta);
 				loadData(getProductos, { asCard: true, inStock: true });
+				setMetodoPago("");
+				setPago(0);
+				setProductos([]);
 				console.log(result.data);
 			} catch (error) {
 				console.log(error);
 			}
-		});
-	};
-
-	const handleCancel = () => {
-		confirm({ description: "¿Estás seguro de que deseas cancelar la venta?" }).then(() => {
-			setMetodoPago("");
-			setPago(0);
-			setProductos([]);
 		});
 	};
 
