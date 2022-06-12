@@ -1,109 +1,169 @@
-const functions = require("firebase-functions");
+const slugify = require("slugify");
 const { firestore } = require("../firebase-server");
+const { includeSearch } = require("../helpers");
+const { Router } = require("express");
 
-exports.getCategorias = functions.https.onCall(async (data, context) => {
+const router = Router();
+
+const COLLECTION = "categorias";
+const PATH = "/api/" + COLLECTION;
+const INTERNAL_ERROR_MESSAGE =
+	", por favor intente nuevamente o comuníquese con el administrador del sistema";
+
+router.get(PATH, async ({ query }, res) => {
 	try {
-		const querySnapshot = firestore.collection("categorias").orderBy("titulo");
-		const snapshot = await querySnapshot.get();
+		let docRef = firestore.collection(COLLECTION);
 
-		return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+		!!query.search && (docRef = includeSearch(docRef, query.search));
+
+		const snapshot = await docRef.get();
+
+		if (!!query.pagination && query.pagination === "true") {
+			const pageNumber = parseInt(query.page) || 0;
+			const pageSize = parseInt(query.size) || 5;
+
+			const page = await docRef
+				.limit(pageSize)
+				.offset(pageNumber * pageSize)
+				.get();
+
+			const snapshotData = page.docs.map((doc) => {
+				const { search, ...content } = doc.data();
+
+				return {
+					id: doc.id,
+					...content
+				};
+			});
+
+			return res.status(200).json({
+				page: pageNumber,
+				size: pageSize,
+				count: snapshot.size,
+				content: snapshotData
+			});
+		} else {
+			const snapshotData = snapshot.docs.map((doc) => {
+				const { search, ...content } = doc.data();
+
+				return {
+					id: doc.id,
+					...content
+				};
+			});
+
+			return res.status(200).json(snapshotData);
+		}
 	} catch (error) {
-		throw error;
+		return res
+			.status(500)
+			.json({ message: "Hubo un error al obtener categorías" + INTERNAL_ERROR_MESSAGE });
 	}
 });
 
-exports.getCategoriaDetalle = functions.https.onCall(async (data, context) => {
+router.get(PATH + "/:id", async ({ params }, res) => {
 	try {
-		const docRef = firestore.collection("categorias").doc(data.id);
+		const docRef = firestore.collection(COLLECTION).doc(params.id);
 		const snapshot = await docRef.get();
 
 		if (!snapshot.exists) {
-			throw new functions.https.HttpsError("not-found", "El Id proporcionado no existe");
+			return res.status(404).json({ message: `La categoría ${params.id} no existe` });
 		}
 
-		return { id: snapshot.id, ...snapshot.data() };
+		const { search, ...snapshotData } = snapshot.data();
+		return res.status(200).json({ id: snapshot.id, ...snapshotData });
 	} catch (error) {
-		throw error;
+		return res.status(500).json({
+			message: `Hubo un error al obtener la categoría ${params.id}` + INTERNAL_ERROR_MESSAGE
+		});
 	}
 });
 
-exports.addCategoria = functions.https.onCall(async (data, context) => {
+router.post(PATH + "/add", async ({ body }, res) => {
 	try {
-		const docRef = firestore.collection("categorias").doc(data.id);
+		const id = slugify(body.titulo, { lower: true, strict: true, locale: "es" });
+		const docRef = firestore.collection(COLLECTION).doc(id);
 		const snapshot = await docRef.get();
+
 		if (snapshot.exists) {
-			throw new functions.https.HttpsError("already-exists", "El Id proporcionado ya existe");
+			return res.status(400).json({ message: `La categoría ${id} ya existe` });
 		}
-		const { id, ...content } = data;
-		await docRef.set(content);
-		return `La categoría ${data.id} ha sido creada`;
+
+		await docRef.set({ ...body, search: body.titulo.toLowerCase() });
+
+		return res.status(200).json({ message: `La categoría ${id} ha sido creado` });
 	} catch (error) {
-		throw error;
+		return res.status(500).json({
+			message: `Hubo un error al agregar la categoría ${body.id}` + INTERNAL_ERROR_MESSAGE
+		});
 	}
 });
 
-exports.updateCategoria = functions.https.onCall(async (data, context) => {
+router.put(PATH + "/update", async ({ body }, res) => {
 	try {
-		const collectionRef = firestore.collection("categorias");
-		const currentRef = collectionRef.doc(data.id);
-		const newRef = collectionRef.doc(data.newId);
-		const currentSnapshot = await currentRef.get();
-		const newSnapshot = await newRef.get();
+		const { id, titulo } = body;
+		const docRef = firestore.collection(COLLECTION).doc(id);
+		const snapshot = await docRef.get();
 
-		if (!currentSnapshot.exists) {
-			throw new functions.https.HttpsError("not-found", "El Id proporcionado no existe");
-		} else if (newSnapshot.exists) {
-			throw new functions.https.HttpsError(
-				"already-exists",
-				`La categoría ${data.titulo} ya existe`
-			);
+		if (!snapshot.exists) {
+			return res.status(404).json({ message: `La categoría ${id} no existe` });
 		}
 
-		const collectionProdutos = firestore.collection("productos");
-		const productosSnapshot = await collectionProdutos.where("categoria.id", "==", data.id).get();
+		const newId = slugify(titulo, { lower: true, strict: true, locale: "es" });
+		const newDocRef = firestore.collection(COLLECTION).doc(newId);
+		const newSnapshot = await newDocRef.get();
 
+		if (newSnapshot.exists) {
+			return res.status(400).json({ message: `La categoría ${newId} ya existe` });
+		}
+
+		const productosRef = firestore.collection("productos").where("categoriaId", "==", id);
+		const productosSnapshot = await productosRef.get();
 		const batch = firestore.batch();
 
 		productosSnapshot.forEach((doc) => {
-			const docRef = collectionProdutos.doc(doc.id);
-			batch.update(docRef, { categoria: { id: data.newId, titulo: data.titulo } });
+			batch.update(doc.ref, { categoriaId: newId });
 		});
+
+		batch.set(newDocRef, { titulo, search: body.titulo.toLowerCase() });
+		batch.delete(docRef);
 
 		await batch.commit();
 
-		const { id, newId, ...content } = data;
-
-		await currentRef.delete();
-		await newRef.set(content);
-
-		return `La categoría ${data.id} ha sido cambiada por ${data.newId}`;
+		return res.status(200).json({ message: `La categoría ${id} ha sido actualizada a ${newId}` });
 	} catch (error) {
-		throw error;
+		return res.status(500).json({
+			message: `Hubo un error al actualizar la categoría ${body.id}` + INTERNAL_ERROR_MESSAGE
+		});
 	}
 });
 
-exports.deleteCategoria = functions.https.onCall(async (data, context) => {
+router.delete(PATH + "/delete/:id", async ({ params }, res) => {
 	try {
-		const docRef = firestore.collection("categorias").doc(data.id);
+		const docRef = firestore.collection(COLLECTION).doc(params.id);
 		const snapshot = await docRef.get();
+
 		if (!snapshot.exists) {
-			throw new functions.https.HttpsError("not-found", "El Id proporcionado no existe");
+			return res.status(404).json({ message: `La categoría ${params.id} no existe` });
 		}
 
-		const productos = firestore.collection("productos");
-		const querySnapshot = await productos.where("categoria", "==", data.id).get();
+		const productosRef = firestore.collection("productos").where("categoriaId", "==", params.id);
+		const productosSnapshot = await productosRef.get();
 
-		if (!querySnapshot.empty) {
-			throw new functions.https.HttpsError(
-				"aborted",
-				"Existen productos con esta categoría, elimine los productos o pruebe actualizar la categoría"
-			);
+		if (!productosSnapshot.empty) {
+			return res.status(500).json({
+				message: `La categoría ${params.id} no puede ser eliminada porque tiene productos asociados`
+			});
 		}
 
 		await docRef.delete();
 
-		return `La categoría ${data.id} ha sido eliminada`;
+		return res.status(200).json({ message: `La categoría ${params.id} ha sido eliminado` });
 	} catch (error) {
-		throw error;
+		return res.status(500).json({
+			message: `Hubo un error al eliminar la categoría ${params.id}` + INTERNAL_ERROR_MESSAGE
+		});
 	}
 });
+
+module.exports = router;

@@ -1,50 +1,20 @@
-import { Add, Search } from "@mui/icons-material";
-import {
-	Button,
-	IconButton,
-	InputAdornment,
-	MenuItem,
-	TextField,
-	Toolbar,
-	Tooltip
-} from "@mui/material";
+import { Search } from "@mui/icons-material";
+import { IconButton, InputAdornment, TextField, Toolbar, Tooltip } from "@mui/material";
 import { Box } from "@mui/system";
 import { useFormik } from "formik";
-import React, { useCallback, useEffect, useState } from "react";
-import { useFunctions } from "../../hooks/useFunctions";
-import validator from "validator";
-import { useMultiDialog } from "../../providers/MultiDialogProvider";
+import { validateSearch } from "../../utils/helpers";
 
-function CategoriaSearch() {
-	const { isAlphanumeric, isEmpty } = validator;
-	const { openDialog, stopLoading } = useMultiDialog();
-
+function CategoriaSearch({ callback, children }) {
 	const { values, touched, errors, handleSubmit, handleChange } = useFormik({
 		initialValues: { search: "" },
-		validate: ({ search }) => {
-			const errors = {};
-			if (!isEmpty(search) && !isAlphanumeric(search, "es-ES", { ignore: " :-" })) {
-				errors.search = "Introducir solo caracteres alfanuméricos";
-			}
-			return errors;
-		},
+		validate: (values) => validateSearch(values),
 		onSubmit: (values) => {
-			console.log(values);
+			callback(values);
 		}
 	});
 
-	const handleOpenDialog = () => {
-		openDialog("agregar");
-		stopLoading();
-	};
-
 	return (
-		<Toolbar
-			disableGutters
-			sx={{ p: 3, gap: 3, alignItems: "start" }}
-			component="form"
-			onSubmit={handleSubmit}
-		>
+		<Toolbar sx={{ pb: 3, pt: 5, gap: 3, alignItems: "start" }} component="form" onSubmit={handleSubmit}>
 			<Box sx={{ flexGrow: 1 }}>
 				<TextField
 					name="search"
@@ -68,21 +38,7 @@ function CategoriaSearch() {
 					}}
 				/>
 			</Box>
-			<Tooltip title="Agregar Categoria">
-				<Button
-					variant="contained"
-					sx={{
-						borderRadius: 100,
-						height: "55.97px",
-						minWidth: "0px",
-						width: "55.97px",
-						p: 0
-					}}
-					onClick={handleOpenDialog}
-				>
-					<Add />
-				</Button>
-			</Tooltip>
+			<Tooltip title="Agregar Categoria">{children}</Tooltip>
 		</Toolbar>
 	);
 }

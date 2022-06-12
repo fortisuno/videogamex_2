@@ -1,4 +1,4 @@
-import { TableRow } from "@mui/material";
+import { TableRow, Tooltip } from "@mui/material";
 import { useConfirm } from "material-ui-confirm";
 import React from "react";
 import { useFunctions } from "../../hooks/useFunctions";
@@ -7,41 +7,43 @@ import { useMultiDialog } from "../../providers/MultiDialogProvider";
 import ButtonCell from "../ButtonCell";
 import IconButtonCell from "../IconButtonCell";
 import TextCell from "../TextCell";
+import { useAuth } from "../../providers/AuthProvider";
+import axios from "axios";
 
-function UsuarioRow({ id, displayName, role }) {
-	const { openDialog, loadData } = useMultiDialog();
-	const { getUsuarioDetalle, getUsuarios, deleteUsuario } = useFunctions();
-	const { loadData: refresh } = useDataContext();
+function UsuarioRow({ data, openDialog, onDelete }) {
+	const { usuario } = useAuth();
+	const { id, displayName, role } = data;
 	const confirm = useConfirm();
-
-	const handleShowDetalle = () => {
-		openDialog("detalle");
-		loadData(getUsuarioDetalle, id);
-	};
 
 	const handleDelete = () => {
 		confirm({
-			description: `¿Estas seguro de eliminar el usuario ${id}?`
-		})
-			.then(async () => {
-				// do something
-				try {
-					const result = await deleteUsuario({ id });
-					console.log(result.data);
-				} catch (error) {
-					console.log(error);
-				} finally {
-					await refresh(getUsuarios);
-				}
-			})
-			.catch(() => {
-				// do something
-			});
+			description: `¿Estas seguro de eliminar a ${displayName}?`
+		}).then(() => {
+			axios
+				.delete(process.env.REACT_APP_API_URL + "/usuarios/delete/" + id)
+				.then((response) => {
+					onDelete(response.data.message, true);
+				})
+				.catch(({ response }) => {
+					onDelete(response.data.message, false);
+				});
+		});
 	};
 
-	return (
+	const disabled = data.id === usuario.data.id;
+
+	return disabled ? (
+		<Tooltip title="Usuario actual" placement="left" arrow>
+			<TableRow>
+				<ButtonCell text={id} disabled callback={openDialog} />
+				<TextCell disabled text={displayName} />
+				<TextCell disabled text={role} />
+				<IconButtonCell text={id} disabled callback={handleDelete} />
+			</TableRow>
+		</Tooltip>
+	) : (
 		<TableRow>
-			<ButtonCell text={id} callback={handleShowDetalle} />
+			<ButtonCell text={id} callback={openDialog} />
 			<TextCell text={displayName} />
 			<TextCell text={role} />
 			<IconButtonCell text={id} callback={handleDelete} />

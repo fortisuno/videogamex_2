@@ -1,21 +1,28 @@
 import { Add, Close } from "@mui/icons-material";
 import { Box, IconButton, InputAdornment, ListItem, ListItemText, TextField } from "@mui/material";
-import React from "react";
+import React, { useState } from "react";
+import { useEffect } from "react";
 import { useCarrito } from "../../providers/CarritoProvider";
 
-function ProductoThumbnail({ data }) {
-	const { updateItem, removeItem } = useCarrito();
+function ProductoThumbnail({ data, handleCantidad, remove }) {
+	const updateCantidad = ({ target }) => {
+		const cantidad =
+			!target.value.length > 0 ? 1 : parseInt(target.value) > data.stock ? data.stock : parseInt(target.value);
+		handleCantidad(data.id, cantidad);
+	};
+
 	return (
 		<ListItem
 			disableGutters
+			dense
 			secondaryAction={
-				<IconButton size="small" color="error" edge="end" onClick={() => removeItem(data.id)}>
+				<IconButton size="small" color="error" edge="end" onClick={() => remove(data.id)}>
 					<Close />
 				</IconButton>
 			}
 		>
 			<ListItemText
-				primaryTypographyProps={{ noWrap: true }}
+				primaryTypographyProps={{ noWrap: true, maxWidth: "100px" }}
 				primary={data.titulo}
 				secondary={`$ ${data.precio.toFixed(2)}`}
 			/>
@@ -25,7 +32,7 @@ function ProductoThumbnail({ data }) {
 					size="small"
 					type="number"
 					value={data.cantidad}
-					onChange={({ target }) => updateItem(target.value, data.id)}
+					onChange={updateCantidad}
 					fullWidth
 					InputProps={{
 						inputProps: { min: 1, max: data.stock }

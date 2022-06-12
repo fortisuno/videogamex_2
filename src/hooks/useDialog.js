@@ -1,26 +1,25 @@
 import { useState } from "react";
 
-export function useDialog() {
-	const [showDialog, setShowDialog] = useState(false);
-	const [loading, setLoading] = useState(true);
-	const [content, setContent] = useState({});
+export function useDialog(initialProps) {
+	const [dialog, setDialog] = useState(initialProps);
 
-	const openDialog = () => {
-		setShowDialog(true);
-		setLoading(true);
+	const handleCloseDialog = (event, reason) => {
+		if (reason === "backdropClick") return;
+		setDialog((prev) => ({ ...prev, open: false }));
 	};
 
-	const closeDialog = () => {
-		setShowDialog(false);
+	const handleOpenDialog = (view = initialProps.view) => {
+		setDialog({ open: true, view });
 	};
 
-	const handleContent = (data) => {
-		setContent(data);
+	const handleViewDialog = (view) => {
+		setDialog((prev) => ({ ...prev, view }));
 	};
 
-	const stopLoading = () => {
-		setLoading(false);
+	return {
+		data: dialog,
+		open: handleOpenDialog,
+		close: handleCloseDialog,
+		handleView: handleViewDialog
 	};
-
-	return { showDialog, content, loading, openDialog, closeDialog, handleContent, stopLoading };
 }

@@ -14,58 +14,47 @@ import {
 	Typography
 } from "@mui/material";
 import { useFormik } from "formik";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useAuth } from "../providers/AuthProvider";
+import axios from "axios";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { auth } from "../utils/firebase-client";
+import { validateLogin } from "../utils/helpers";
 
 function Login() {
 	const [showPassword, setShowPassword] = useState(false);
 	const [message, setMessage] = useState({});
 	const { signin } = useAuth();
-	const { values, errors, touched, handleChange, handleSubmit, isSubmitting } = useFormik({
+	const { values, errors, touched, handleChange, handleSubmit, isSubmitting, setSubmitting } = useFormik({
 		initialValues: {
 			email: "",
 			password: ""
 		},
-		validate: ({ email, password }) => {
-			const errors = {};
+		validate: (values) => validateLogin(values),
+		onSubmit: ({ email, password }) => {
+			signin(email, password)
+				.then((userCredentials) => {
+					setMessage({ success: "Bienvenido " + userCredentials.displayName });
+				})
+				.catch(({ code }) => {
+					const m = {};
+					switch (code) {
+						case "auth/user-not-found":
+							m.error = "Este usuario no existe";
+							break;
+						case "auth/wrong-password":
+							m.error = "La contraseña es incorrecta";
+							break;
+						default:
+							m.error = "Hubo un error al iniciar sesión";
+							break;
+					}
 
-			if (!!message.error) {
-				setMessage({});
-			}
-
-			// Email
-			if (validator.isEmpty(email)) errors.email = "Introduce tu correo";
-			else if (!validator.isEmail(email)) errors.email = "El correo proporcionado no es valido";
-
-			// Password
-			if (validator.isEmpty(password)) errors.password = "Introduce tu contraseña";
-			else if (!validator.isAlphanumeric(password, "es-ES", { ignore: /-_.:,\$%&~#/g }))
-				errors.password =
-					"Solo se permiten valores alphanimericos y los caracteres especiales: - _ . : , $ % & ~ #";
-
-			return errors;
-		},
-		onSubmit: async ({ email, password }) => {
-			try {
-				const userCredentials = await signin(email, password);
-				setMessage({ success: "Bienvenido " + userCredentials.uid });
-			} catch (err) {
-				let message = "";
-
-				switch (err.code) {
-					case "auth/user-not-found":
-						message = "Este usuario no existe";
-						break;
-					case "auth/wrong-password":
-						message = "La contraseña es incorrecta";
-						break;
-					default:
-						message = "Hubo un error al iniciar sesión";
-						break;
-				}
-
-				setMessage({ error: message });
-			}
+					setMessage(m);
+				})
+				.finally(() => {
+					setSubmitting(false);
+				});
 		}
 	});
 

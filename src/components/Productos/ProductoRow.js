@@ -1,51 +1,35 @@
-import { Box, TableRow, Typography } from "@mui/material";
+import { TableRow } from "@mui/material";
+import axios from "axios";
 import { useConfirm } from "material-ui-confirm";
-import React, { useState } from "react";
-import { useFunctions } from "../../hooks/useFunctions";
-import { useDataContext } from "../../providers/DataProvider";
-import { useMultiDialog } from "../../providers/MultiDialogProvider";
 import ButtonCell from "../ButtonCell";
 import IconButtonCell from "../IconButtonCell";
 import TextCell from "../TextCell";
 
-function ProductoRow({ id, titulo }) {
-	const { openDialog, loadData } = useMultiDialog();
-	const [disabled, setDisabled] = useState(false);
-	const { getProductoDetalle, getProductos, deleteProducto } = useFunctions();
-	const { loadData: refresh } = useDataContext();
+function ProductoRow({ data, openDialog, onDelete }) {
+	const { id, titulo, stock } = data;
 	const confirm = useConfirm();
-
-	const handleShowDetalle = () => {
-		openDialog("detalle");
-		loadData(getProductoDetalle, id);
-	};
 
 	const handleDelete = () => {
 		confirm({
 			description: `¿Estas seguro de eliminar el producto ${id}?`
-		})
-			.then(async () => {
-				// do something
-				try {
-					const result = await deleteProducto({ id });
-					console.log(result.data);
-					setDisabled(true);
-					refresh(getProductos);
-				} catch (error) {
-					throw error;
-				}
-			})
-			.catch((error) => {
-				// do something
-				console.log(error);
-			});
+		}).then(() => {
+			axios
+				.delete(process.env.REACT_APP_API_URL + "/productos/delete/" + id)
+				.then((response) => {
+					onDelete(response.data.message, true);
+				})
+				.catch(({ response }) => {
+					onDelete(response.data.message, false);
+				});
+		});
 	};
 
 	return (
 		<TableRow>
-			<ButtonCell text={id} disabled={disabled} callback={handleShowDetalle} />
+			<ButtonCell text={id} callback={openDialog} />
 			<TextCell text={titulo} />
-			<IconButtonCell text={id} disabled={disabled} callback={handleDelete} />
+			<TextCell text={stock} />
+			<IconButtonCell text={id} callback={handleDelete} />
 		</TableRow>
 	);
 }

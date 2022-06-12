@@ -1,47 +1,32 @@
 import { TableRow } from "@mui/material";
+import axios from "axios";
 import { useConfirm } from "material-ui-confirm";
-import React from "react";
-import { useFunctions } from "../../hooks/useFunctions";
-import { useDataContext } from "../../providers/DataProvider";
-import { useMultiDialog } from "../../providers/MultiDialogProvider";
 import ButtonCell from "../ButtonCell";
 import IconButtonCell from "../IconButtonCell";
 import TextCell from "../TextCell";
 
-function CategoriaRow({ id, titulo }) {
-	const { openDialog, loadData } = useMultiDialog();
-	const { getCategoriaDetalle, getCategorias, deleteCategoria } = useFunctions();
-	const { loadData: refresh } = useDataContext();
+function CategoriaRow({ data, openDialog, onDelete }) {
+	const { id, titulo } = data;
 	const confirm = useConfirm();
-
-	const handleShowDetalle = () => {
-		openDialog("detalle");
-		loadData(getCategoriaDetalle, id);
-	};
 
 	const handleDelete = () => {
 		confirm({
 			description: `¿Estas seguro de eliminar la categoría ${id}?`
-		})
-			.then(async () => {
-				// do something
-				try {
-					const result = await deleteCategoria({ id });
-					console.log(result.data);
-				} catch (error) {
-					console.log(error);
-				} finally {
-					await refresh(getCategorias);
-				}
-			})
-			.catch(() => {
-				// do something
-			});
+		}).then(() => {
+			axios
+				.delete(process.env.REACT_APP_API_URL + "/categorias/delete/" + id)
+				.then((response) => {
+					onDelete(response.data.message, true);
+				})
+				.catch(({ response }) => {
+					onDelete(response.data.message, false);
+				});
+		});
 	};
 
 	return (
 		<TableRow>
-			<ButtonCell text={id} callback={handleShowDetalle} />
+			<ButtonCell text={id} callback={openDialog} />
 			<TextCell text={titulo} />
 			<IconButtonCell text={id} callback={handleDelete} />
 		</TableRow>

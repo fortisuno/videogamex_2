@@ -4,11 +4,14 @@ import { useAuth } from "../providers/AuthProvider";
 import Loading from "../views/Loading";
 
 function RedirectIfLogged({ children }) {
-	const { usuario, loading } = useAuth();
+	const { usuario } = useAuth();
+	const { loading, data, errors } = usuario;
 
 	if (loading) return <Loading />;
 
-	if (!!usuario) return <Navigate to="/" replace />;
+	if (!!errors) console.log(errors);
+
+	if (!!data) return <Navigate to="/" replace />;
 
 	return children;
 }

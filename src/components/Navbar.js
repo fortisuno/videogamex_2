@@ -1,28 +1,13 @@
-import { MoreVert, Settings } from "@mui/icons-material";
-import {
-	AppBar,
-	Box,
-	Button,
-	Container,
-	IconButton,
-	Menu,
-	MenuItem,
-	Toolbar,
-	Tooltip,
-	Typography
-} from "@mui/material";
+import { Settings } from "@mui/icons-material";
+import { AppBar, Box, Button, IconButton, Menu, MenuItem, Toolbar, Tooltip, Typography } from "@mui/material";
 import { grey } from "@mui/material/colors";
 import React from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useFunctions } from "../hooks/useFunctions";
 import { useAuth } from "../providers/AuthProvider";
-import { useMultiDialog } from "../providers/MultiDialogProvider";
 
-function Navbar(props) {
+function Navbar({ openDialog }) {
 	const [anchorElUser, setAnchorElUser] = React.useState(null);
-	const { openDialog, loadData } = useMultiDialog();
-	const { getUsuarioDetalle } = useFunctions();
-	const { isAdmin, signout, usuario } = useAuth();
+	const { signout, usuario } = useAuth();
 	const navigate = useNavigate();
 	const { pathname } = useLocation();
 
@@ -36,12 +21,6 @@ function Navbar(props) {
 
 	const handleSignOut = async () => {
 		await signout();
-	};
-
-	const handleShowDetalle = () => {
-		const { id } = usuario.data;
-		openDialog("detalle");
-		loadData(getUsuarioDetalle, id);
 	};
 
 	return (
@@ -72,13 +51,13 @@ function Navbar(props) {
 					</Typography>
 
 					<Box flexGrow={1} display="flex" justifyContent="right" gap={3}>
-						{isAdmin && (
+						{!!usuario.isAdmin && (
 							<Button
 								variant="outlined"
 								color={pathname === "/" ? "primary" : "inherit"}
 								onClick={() => navigate(pathname === "/" ? "/dashboard/productos" : "/")}
 							>
-								{pathname === "/" ? "Ir al dashboard" : "Ir al inicio"}
+								Ir al dashboard
 							</Button>
 						)}
 						<Tooltip title="Abrir ajustes">
@@ -102,7 +81,7 @@ function Navbar(props) {
 							open={Boolean(anchorElUser)}
 							onClose={handleCloseUserMenu}
 						>
-							<MenuItem onClick={handleShowDetalle}>
+							<MenuItem onClick={openDialog}>
 								<Typography textAlign="center">Ver cuenta</Typography>
 							</MenuItem>
 							<MenuItem onClick={handleSignOut}>

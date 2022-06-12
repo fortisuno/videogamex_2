@@ -1,174 +1,184 @@
-const functions = require("firebase-functions");
-const { FieldValue } = require("firebase-admin/firestore");
+const slugify = require("slugify");
+const { includeSearch } = require("../helpers");
+const { Router } = require("express");
 const { firestore } = require("../firebase-server");
 
-exports.getProductos = functions.https.onCall(async (data, context) => {
+const router = Router();
+
+const COLLECTION = "productos";
+const PATH = "/api/" + COLLECTION;
+const INTERNAL_ERROR_MESSAGE = ", por favor intente nuevamente o comuníquese con el administrador del sistema";
+
+const validateCategoria = async (id) => {
+	const docRef = firestore.collection("categorias").doc(id);
+	const snapshot = await docRef.get();
+	return snapshot.exists;
+};
+
+const getCategoria = async (id) => {
+	const docRef = firestore.collection("categorias").doc(id);
+	const snapshot = await docRef.get();
+	const { titulo } = snapshot.data();
+	return titulo;
+};
+
+router.get(PATH, async ({ query }, res) => {
 	try {
-		let docRef = firestore.collection("productos");
+		let docRef = firestore.collection(COLLECTION);
 
-		if (!!data.inStock) {
-			docRef = docRef.where("stock", ">", 0);
-		}
+		!!query.search && (docRef = includeSearch(docRef, query.search));
+		!!query.categoriaId && (docRef = docRef.where("categoriaId", "==", query.categoriaId));
 
-		if (!!data.categoria) {
-			docRef = docRef.where("categoria", "==", data.categoria);
-		}
+		const pageNumber = parseInt(query.page) || 0;
+		const pageSize = parseInt(query.size) || 12;
 
 		const snapshot = await docRef.get();
+		const page = await docRef
+			.limit(pageSize)
+			.offset(pageNumber * pageSize)
+			.get();
 
-		const snapshotData = snapshot.docs.map((doc) => {
-			const content = doc.data();
+		const snapshotData = await Promise.all(
+			page.docs.map(async (doc) => {
+				const { titulo, stock, precio, imagen, categoriaId } = doc.data();
+				const categoria = await getCategoria(categoriaId);
+				const content = { titulo, stock };
 
-			const producto = { titulo: content.titulo, stock: content.stock };
+				if (!!query.asCard && query.asCard === "true") {
+					content.categoria = categoria;
+					content.precio = precio;
+					content.imagen = imagen;
+				}
 
-			if (!!data.asCard) {
-				producto.precio = content.precio;
-				producto.imagen = content.imagen;
-				producto.categoria = content.categoria;
-			}
+				return {
+					id: doc.id,
+					...content
+				};
+			})
+		);
 
-			return {
-				id: doc.id,
-				...producto
-			};
+		return res.status(200).json({
+			page: pageNumber,
+			size: pageSize,
+			count: snapshot.size,
+			content: snapshotData
 		});
-		return snapshotData;
 	} catch (error) {
-		throw error;
+		return res.status(500).json({ message: "Hubo un error al obtener productos" + INTERNAL_ERROR_MESSAGE });
 	}
 });
 
-exports.getProductoDetalle = functions.https.onCall(async (data, context) => {
+router.get(PATH + "/:id", async ({ params }, res) => {
 	try {
-		const docRef = firestore.collection("productos").doc(data.id);
+		const docRef = firestore.collection(COLLECTION).doc(params.id);
 		const snapshot = await docRef.get();
+
 		if (!snapshot.exists) {
-			throw new functions.https.HttpsError("not-found", "El Id proporcionado no existe");
+			return res.status(404).json({ message: `El producto ${params.id} no existe` });
 		}
-		const snapshotData = snapshot.data();
-		return { id: snapshot.id, ...snapshotData };
+
+		const { search, ...snapshotData } = snapshot.data();
+		return res.status(200).json({ id: snapshot.id, ...snapshotData });
 	} catch (error) {
-		throw error;
+		return res.status(500).json({
+			message: `Hubo un error al obtener el producto ${params.id}` + INTERNAL_ERROR_MESSAGE
+		});
 	}
 });
 
-exports.addProducto = functions.https.onCall(async (data, context) => {
+router.post(PATH + "/add", async ({ body }, res) => {
 	try {
-		const docRef = firestore.collection("productos").doc(data.id);
+		const id = slugify(body.titulo, { lower: true, strict: true, locale: "es" });
+		const docRef = firestore.collection(COLLECTION).doc(id);
 		const snapshot = await docRef.get();
 
 		if (snapshot.exists) {
-			throw new functions.https.HttpsError(
-				"already-exists",
-				`Este titulo ya está registrado con el id ${data.id}`
-			);
-		}
-		const { categoria } = data;
-		const categorias = firestore.collection("categorias").doc(categoria.id);
-		const categoriaSnapshot = await categorias.get();
-
-		if (!categoriaSnapshot.exists) {
-			throw new functions.https.HttpsError(
-				"failed-precondition",
-				"La categoria proporcionada no existe"
-			);
+			return res.status(400).json({ message: `El producto ${id} ya existe` });
 		}
 
-		const { id, ...content } = data;
-		await docRef.set(content);
+		const categoriaExiste = await validateCategoria(body.categoriaId);
+		if (!categoriaExiste) {
+			return res.status(400).json({ message: `La categoría ${body.categoriaId} no existe` });
+		}
+		await docRef.set({ ...body, search: body.titulo.toLowerCase() });
 
-		return `El producto ${data.id} ha sido creado`;
+		return res.status(200).json({ message: `El producto ${id} ha sido creado` });
 	} catch (error) {
-		throw error;
+		return res.status(500).json({
+			message: `Hubo un error al agregar el producto ${body.id}` + INTERNAL_ERROR_MESSAGE
+		});
 	}
 });
 
-exports.updateProducto = functions.https.onCall(async (data, context) => {
+router.put(PATH + "/update", async ({ body }, res) => {
 	try {
-		const query = firestore.collection("productos");
-		const snapshotCurrent = query.doc(data.id);
-		const currentRef = await snapshotCurrent.get();
+		const { id, ...content } = body;
+		const docRef = firestore.collection(COLLECTION).doc(id);
+		const snapshot = await docRef.get();
 
-		let message = "";
-
-		if (!currentRef.exists) {
-			throw new functions.https.HttpsError("not-found", "El Id proporcionado no existe");
+		if (!snapshot.exists) {
+			return res.status(400).json({ message: `El producto ${id} ya existe` });
 		}
 
-		if (!!data.categoria) {
-			const queryCategorias = firestore.collection("categorias").doc(data.categoria.id);
-			const snapshotCategorias = await queryCategorias.get();
-			if (!snapshotCategorias.exists) {
-				throw new functions.https.HttpsError(
-					"not-found",
-					`La categoría ${data.categoria.id} no existe.`
-				);
+		if (!!body.categoriaId) {
+			const categoriaExiste = await validateCategoria(body.categoriaId);
+			if (!categoriaExiste) {
+				return res.status(400).json({ message: `La categoría ${body.categoriaId} no existe` });
 			}
 		}
 
-		if (!!data.newId) {
-			const { id, newId, ...content } = data;
-			const snapshotNew = query.doc(data.newId);
-			const newRef = await snapshotNew.get();
+		if (!!body.titulo) {
+			const newId = slugify(body.titulo, { lower: true, strict: true, locale: "es" });
+			const newDocRef = firestore.collection(COLLECTION).doc(newId);
+			const newSnapshot = await newDocRef.get();
 
-			if (newRef.exists) {
-				throw new functions.https.HttpsError(
-					"already-exists",
-					`El producto ${data.titulo} ya existe`
-				);
+			if (newSnapshot.exists) {
+				return res.status(400).json({ message: `El producto ${newId} ya existe` });
 			}
 
-			const productoData = currentRef.data();
-			const current = {
-				id: snapshotCurrent.id,
-				titulo: productoData.titulo,
-				precio: productoData.precio
-			};
-
-			const queryVentas = firestore.collection("ventas");
-			const snapshotVentas = await queryVentas
-				.where("productos", "array-contains", current)
-				.get();
-
+			const { titulo, search, ...currentData } = snapshot.data();
 			const batch = firestore.batch();
 
-			snapshotVentas.forEach(async (doc) => {
-				const docRef = queryVentas.doc(doc.id);
-				const venta = await docRef.get();
-				const { productos } = venta.data();
-				batch.update(docRef, {
-					productos: productos.map((p) =>
-						p.id === data.id ? { ...p, id: data.newId, titulo: data.titulo } : p
-					)
-				});
+			batch.set(newDocRef, {
+				...currentData,
+				...content,
+				search: body.titulo.toLowerCase(),
+				titulo: body.titulo
 			});
+			batch.delete(docRef);
 
-			batch.commit();
+			await batch.commit();
 
-			await snapshotCurrent.delete();
-			await snapshotNew.set({ ...productoData, ...content });
-			message = `El producto ${data.id} a sido actualizado a ${data.newId}.`;
-		} else {
-			const { id, ...content } = data;
-			await snapshotCurrent.update(content);
-			message = `El producto ${data.id} a sido actualizado.`;
+			return res.status(200).json({ message: `El producto ${id} ha sido actualizado a ${newId}` });
 		}
-		return message;
+
+		await docRef.update(content);
+
+		return res.status(200).json({ message: `El producto ${id} ha sido actualizado` });
 	} catch (error) {
-		throw new functions.https.HttpsError(error.code, error.message);
+		return res.status(500).json({
+			message: `Hubo un error al actualizar el producto ${body.id}` + INTERNAL_ERROR_MESSAGE
+		});
 	}
 });
 
-exports.deleteProducto = functions.https.onCall(async (data, context) => {
+router.delete(PATH + "/delete/:id", async ({ params }, res) => {
 	try {
-		const docRef = firestore.collection("productos").doc(data.id);
+		const docRef = firestore.collection(COLLECTION).doc(params.id);
 		const snapshot = await docRef.get();
+
 		if (!snapshot.exists) {
-			throw new functions.https.HttpsError("not-found", "El Id proporcionado no existe");
+			return res.status(404).json({ message: `El producto ${params.id} no existe` });
 		}
+
 		await docRef.delete();
-		return `El producto ${data.id} ha sido eliminado`;
+
+		return res.status(200).json({ message: `El producto ${params.id} ha sido eliminado` });
 	} catch (error) {
-		throw error;
+		return res.status(500).json({
+			message: `Hubo un error al eliminar el producto ${params.id}` + INTERNAL_ERROR_MESSAGE
+		});
 	}
 });
+
+module.exports = router;

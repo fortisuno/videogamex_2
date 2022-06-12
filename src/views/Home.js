@@ -1,15 +1,14 @@
+import LoadingButton from "@mui/lab/LoadingButton";
 import {
-	Alert,
-	AlertTitle,
 	Box,
 	Button,
-	Container,
 	Divider,
 	Grid,
 	InputAdornment,
 	List,
 	ListItem,
 	ListItemText,
+	Snackbar,
 	Stack,
 	TextField,
 	ToggleButton,
@@ -17,230 +16,233 @@ import {
 	Toolbar,
 	Typography
 } from "@mui/material";
-import React, { useEffect, useState } from "react";
-import Navbar from "../components/Navbar";
-import validator from "validator";
-import MultiDialogProvider from "../providers/MultiDialogProvider";
-import MultiDialog from "../components/MultiDialog";
-import UsuarioDetalle from "../components/Usuarios/UsuarioDetalle";
-import UsuarioForm from "../components/Usuarios/UsuarioForm";
-import { emptyProducto, emptyUsuario } from "../utils/empy-entities";
-import ProductoSearch from "../components/Productos/ProductoSearch";
-import ProductoForm from "../components/Productos/ProductoForm";
-import ProductoDetalle from "../components/Productos/ProductoDetalle";
-import { useCarrito } from "../providers/CarritoProvider";
-import { useData } from "../hooks/useData";
-import { useDataContext } from "../providers/DataProvider";
-import { useFunctions } from "../hooks/useFunctions";
-import ProductoCard from "../components/Productos/ProductoCard";
-import ProductoThumbnail from "../components/Productos/ProductoThumbnail";
-import LoadAnimation from "../components/LoadAnimation";
-import { useAuth } from "../providers/AuthProvider";
+import axios from "axios";
+import { useFormik } from "formik";
 import { useConfirm } from "material-ui-confirm";
-import moment from "moment";
+import { useEffect, useState } from "react";
+import LoadAnimation from "../components/LoadAnimation";
+import Navbar from "../components/Navbar";
+import ProductoCard from "../components/Productos/ProductoCard";
+import ProductoSearch from "../components/Productos/ProductoSearch";
+import ProductoThumbnail from "../components/Productos/ProductoThumbnail";
+import UsuarioDialog from "../components/Usuarios/UsuarioDialog";
+import { useCarrito } from "../hooks/useCarrito";
+import { useDialog } from "../hooks/useDialog";
+import { useFetch } from "../hooks/useFetch";
+import { useSnackbar } from "../hooks/useSnackbar";
+import { useAuth } from "../providers/AuthProvider";
+import { regexp, validateVenta } from "../utils/helpers";
 
 function Home() {
-	const { carrito, setMetodoPago, setPago, setProductos } = useCarrito();
-	const { data, loadData, resetData, loading } = useDataContext();
-	const [clientAmount, setClientAmount] = useState("");
-	const { usuario } = useAuth();
-	const confirm = useConfirm();
-	const { getProductos, addVenta } = useFunctions();
-	const [errors, setErrors] = useState({
-		clientAmount: "",
-		search: ""
+	const initialRequest = { path: "/productos", params: { asCard: true } };
+	const [request, setRequest] = useState(initialRequest);
+	const [selected, setSelected] = useState(null);
+	const { values, errors, touched, isSubmitting, handleSubmit, setFieldValue, setSubmitting, resetForm } = useFormik({
+		initialValues: { pago: "", metodoPago: "efectivo" },
+		validate: (values) => validateVenta(values),
+		onSubmit: (values) => {
+			confirm({ description: "¿Está seguro de que desea realizar la venta?" }).then((result) => {
+				const { productos, total, cambio } = carrito;
+				values.pago = parseFloat(values.pago);
+				const venta = {
+					...values,
+					productos,
+					total,
+					cambio,
+					usuarioId: usuario.data.id
+				};
+				axios
+					.post(process.env.REACT_APP_API_URL + "/ventas/add", venta)
+					.then((response) => {
+						resetForm();
+						carrito.reset();
+						handleFeedback(response.data.message, true);
+					})
+					.catch(({ response }) => {
+						handleFeedback(response.data.message, false);
+					})
+					.finally(() => {
+						setSubmitting(false);
+					});
+			});
+		}
 	});
 
+	const usuarioDialog = useDialog({ open: false, view: "detalle" });
+	const feedback = useSnackbar({ open: false, message: "" });
+	const carrito = useCarrito(values.pago);
+	const { usuario } = useAuth();
+	const page = useFetch(request);
+	const confirm = useConfirm();
+
 	useEffect(() => {
-		loadData(getProductos, { asCard: true, inStock: true });
-		return () => {
-			resetData();
-		};
-	}, [loadData, resetData]);
-
-	const { metodoPago } = carrito;
-
-	const { isEmpty, matches } = validator;
-	const regExp = {
-		currency: /^[1-9][0-9]*$|^[1-9][0-9]*\.$|^[1-9][0-9]*\.[0-9]{1,2}$/g
-	};
-
-	const handleChange = (event, metodo) => {
-		if (!!metodo) {
-			setMetodoPago(metodo);
+		if (!carrito.productos.length > 0) {
+			setFieldValue("pago", "");
 		}
+	}, [carrito.productos, setFieldValue]);
+
+	const filterData = (props) => {
+		const { search, categoriaId, ...pageParams } = request.params;
+		const filter = { ...pageParams };
+
+		!!props.search && (filter.search = props.search.toLowerCase().trim());
+		props.categoriaId !== "todas" && (filter.categoriaId = props.categoriaId);
+
+		setRequest({ path: request.path, params: filter });
 	};
 
-	const handleClientAmount = ({ target }) => {
-		if (isEmpty(target.value) || matches(target.value, regExp.currency)) {
-			setPago(parseFloat(target.value));
+	const handlePago = ({ target }) => {
+		setFieldValue("pago", target.validity.valid ? target.value : values.pago);
+	};
+
+	const handleMetodoPago = (event, metodo) => {
+		setFieldValue("metodoPago", metodo);
+	};
+
+	const handleCancelar = () => {
+		confirm({ description: "¿Estás seguro de que deseas cancelar la venta?" }).then(carrito.reset);
+	};
+
+	const handleOpenDialog = (id, view = "detalle") => {
+		setSelected(id);
+		usuarioDialog.open(view);
+	};
+
+	const handleFeedback = (message, refresh) => {
+		if (refresh) {
+			setRequest(initialRequest);
 		}
-
-		if (matches(target.value, /^[1-9][0-9]*\.$/g)) {
-			setErrors({ ...errors, clientAmount: "Agrega centavos o quita el punto" });
-		} else if (!isEmpty(errors.clientAmount)) {
-			setErrors({ ...errors, clientAmount: "" });
-		}
-	};
-
-	const handleCancel = () => {
-		confirm({ description: "¿Estás seguro de que deseas cancelar la venta?" }).then(() => {
-			setMetodoPago("");
-			setPago(0);
-			setProductos([]);
-		});
-	};
-
-	const handlePayment = () => {
-		confirm({ description: "¿Estás seguro de que deseas realizar la venta?" }).then(async () => {
-			try {
-				const fecha = moment();
-				const venta = {
-					...carrito,
-					productos: carrito.productos.map((producto) => {
-						const { stock, ...detalle } = producto;
-						return detalle;
-					}),
-					usuario: usuario.data.id,
-					fecha: fecha.toDate(),
-					mes: fecha.format("MM"),
-					anio: fecha.format("YYYY"),
-					id: fecha.format("DDMMYYYYhhmmss")
-				};
-				const result = await addVenta(venta);
-				loadData(getProductos, { asCard: true, inStock: true });
-				setMetodoPago("");
-				setPago(0);
-				setProductos([]);
-				console.log(result.data);
-			} catch (error) {
-				console.log(error);
-			}
-		});
+		feedback.show(message);
 	};
 
 	return (
 		<Box height="100vh" sx={{ display: "grid", gridTemplateRows: "auto 1fr" }}>
-			<MultiDialogProvider initialValue={emptyUsuario}>
-				<Navbar />
-				<MultiDialog components={[UsuarioDetalle, UsuarioForm]} />
-			</MultiDialogProvider>
+			<Navbar openDialog={() => handleOpenDialog(usuario.data.id)} />
 			<Toolbar />
-			<Container maxWidth="xl" sx={{ height: "100%" }}>
-				<Stack
-					direction="row"
-					alignItems="stretch"
-					height="inherit"
-					divider={
-						<Divider
-							orientation="vertical"
-							sx={{ height: "90%", alignSelf: "center" }}
-							flexItem
-						/>
-					}
-					spacing={5}
-				>
-					<Box sx={{ flexGrow: 1 }}>
-						<MultiDialogProvider initialValue={emptyProducto}>
-							<ProductoSearch />
-							<MultiDialog components={[null, null]} />
-						</MultiDialogProvider>
-						<Box
-							sx={{
-								width: "100%",
-								display: "grid",
-								gridTemplateColumns: "repeat(5, 1fr)",
-								alignItems: "stretch",
-								position: "relative",
-								gap: 5
-							}}
-						>
-							{loading && <LoadAnimation />}
-							{!!data &&
-								data.map((producto, index) => <ProductoCard key={index} {...producto} />)}
-						</Box>
-					</Box>
-					<Stack sx={{ width: "300px", py: 5 }}>
-						<Typography variant="h4">Punto de venta</Typography>
-						<List>
-							{carrito.productos.map((producto, index) => (
-								<ProductoThumbnail key={index} data={producto} />
+			<UsuarioDialog
+				id={selected}
+				view={usuarioDialog.data.view}
+				onChange={usuarioDialog.handleView}
+				onSave={handleFeedback}
+				dialogProps={{ onClose: usuarioDialog.close, open: usuarioDialog.data.open }}
+			/>
+			<Snackbar
+				anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+				open={feedback.open}
+				onClose={feedback.onClose}
+				autoHideDuration={3000}
+				message={feedback.message}
+			/>
+			<Box
+				sx={{
+					display: "grid",
+					gridTemplateColumns: "1fr auto 300px",
+					alignItems: "stretch",
+					height: "100%",
+					px: 5,
+					gap: 5
+				}}
+			>
+				<Box sx={{ position: "relative", height: "inherit" }}>
+					<ProductoSearch callback={filterData} disableGutters />
+					{!!page.loading && <LoadAnimation />}
+					<Grid container spacing={5} columns={{ xs: 1, md: 3, lg: 4, xl: 6 }}>
+						{!!page.data &&
+							page.data.content.map((producto, index) => (
+								<Grid item xs={1} key={index}>
+									<ProductoCard data={producto} callback={carrito.add} />
+								</Grid>
 							))}
-						</List>
-						<Stack mt="auto" spacing={1}>
-							<TextField
-								name="clientAmount"
-								variant="outlined"
-								label="Monto de cliente"
-								placeholder="0.00"
-								error={!isEmpty(errors.clientAmount)}
-								value={carrito.pago}
-								disabled={carrito.productos.length === 0}
-								onChange={handleClientAmount}
-								helperText={!isEmpty(errors.clientAmount) && errors.clientAmount}
-								InputProps={{
-									startAdornment: <InputAdornment position="start">$</InputAdornment>,
-									inputProps: { sx: { textAlign: "end" } }
-								}}
+					</Grid>
+				</Box>
+				<Divider orientation="vertical" flexItem></Divider>
+				<Stack sx={{ width: "300px", py: 5 }} component="form" onSubmit={handleSubmit}>
+					<Typography variant="h4">Punto de venta</Typography>
+					<List>
+						{carrito.productos.map((producto, index) => (
+							<ProductoThumbnail
+								key={index}
+								data={producto}
+								remove={carrito.remove}
+								handleCantidad={carrito.handleProducto}
 							/>
-							<ToggleButtonGroup
-								color="primary"
-								value={metodoPago}
+						))}
+					</List>
+					<Stack mt="auto" spacing={1} pt={3}>
+						<TextField
+							name="pago"
+							variant="outlined"
+							label="Pago"
+							placeholder="0.00"
+							error={touched.pago && !!errors.pago}
+							value={values.pago}
+							disabled={carrito.productos.length === 0}
+							onChange={handlePago}
+							helperText={touched.pago && errors.pago}
+							InputProps={{
+								startAdornment: <InputAdornment position="start">$</InputAdornment>,
+								inputProps: { sx: { textAlign: "end" }, pattern: "[0-9]+|[0-9]+[.]|[0-9]+[.][0-9]{1,2}" }
+							}}
+						/>
+						<ToggleButtonGroup
+							color="primary"
+							value={values.metodoPago}
+							onChange={handleMetodoPago}
+							disabled={carrito.productos.length === 0}
+							exclusive
+							fullWidth
+						>
+							<ToggleButton value="tarjeta">Tarjeta</ToggleButton>
+							<ToggleButton value="efectivo">Efectivo</ToggleButton>
+						</ToggleButtonGroup>
+						<List style={{ marginBottom: "1rem" }}>
+							<ListItem
+								disablePadding={true}
 								disabled={carrito.productos.length === 0}
-								exclusive
-								onChange={handleChange}
-								fullWidth
+								secondaryAction={<ListItemText primary={`$ ${carrito.total.toFixed(2)}`} />}
 							>
-								<ToggleButton value="tarjeta">Tarjeta</ToggleButton>
-								<ToggleButton value="efectivo">Efectivo</ToggleButton>
-							</ToggleButtonGroup>
-							<List style={{ marginBottom: "1rem" }}>
-								<ListItem
-									disablePadding={true}
-									disabled={carrito.productos.length === 0}
-									secondaryAction={
-										<ListItemText primary={`$ ${carrito.total.toFixed(2)}`} />
-									}
-								>
-									<ListItemText sx={{ fontWeight: 500 }} primary="Total de venta" />
-								</ListItem>
-								<ListItem
-									disablePadding={true}
-									disabled={carrito.productos.length === 0}
-									secondaryAction={
-										<ListItemText
-											primaryTypographyProps={{ align: "right" }}
-											primary={`$ ${carrito.cambio.toFixed(2)}`}
-										/>
-									}
-								>
-									<ListItemText primary="Cambio" />
-								</ListItem>
-							</List>
+								<ListItemText sx={{ fontWeight: 500 }} primary="Total de venta" />
+							</ListItem>
+							<ListItem
+								disablePadding={true}
+								disabled={carrito.productos.length === 0}
+								secondaryAction={
+									<ListItemText
+										primaryTypographyProps={{ align: "right" }}
+										primary={`$ ${carrito.cambio.toFixed(2)}`}
+									/>
+								}
+							>
+								<ListItemText primary="Cambio" />
+							</ListItem>
+						</List>
 
-							<Button
-								variant="contained"
-								size="large"
-								disabled={carrito.productos.length === 0 || carrito.total > carrito.pago}
-								onClick={handlePayment}
-								fullWidth
-							>
-								Pagar
-							</Button>
-							<Button
-								variant="outlined"
-								color="error"
-								size="large"
-								disabled={carrito.productos.length === 0}
-								onClick={handleCancel}
-								fullWidth
-							>
-								Cancelar
-							</Button>
-						</Stack>
+						<LoadingButton
+							variant="contained"
+							size="large"
+							loading={isSubmitting}
+							disabled={
+								carrito.productos.length === 0 ||
+								(!!values.pago ? parseFloat(values.pago) < carrito.total : true)
+							}
+							type="submit"
+							fullWidth
+						>
+							Pagar
+						</LoadingButton>
+						<Button
+							variant="outlined"
+							color="error"
+							size="large"
+							disabled={carrito.productos.length === 0}
+							onClick={handleCancelar}
+							fullWidth
+						>
+							Cancelar
+						</Button>
 					</Stack>
 				</Stack>
-			</Container>
+			</Box>
 		</Box>
 	);
 }

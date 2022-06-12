@@ -1,45 +1,99 @@
-import { Alert, AlertTitle, Paper, Typography } from "@mui/material";
-import React, { useCallback, useEffect } from "react";
+import { Add } from "@mui/icons-material";
+import { Button, Paper, Snackbar, Typography } from "@mui/material";
+import React, { useState } from "react";
 import DataTable from "../../components/DataTable";
-import MultiDialog from "../../components/MultiDialog";
-import HistorialDeVentasDetalle from "../../components/HistorialDeVentas/HistorialDeVentasDetalle";
+import HistorialDeVentasDialog from "../../components/HistorialDeVentas/HistorialDeVentasDialog";
 import HistorialDeVentasRow from "../../components/HistorialDeVentas/HistorialDeVentasRow";
 import HistorialDeVentasSearch from "../../components/HistorialDeVentas/HistorialDeVentasSearch";
 import { useDialog } from "../../hooks/useDialog";
-import { useFunctions } from "../../hooks/useFunctions";
-import { useTable } from "../../hooks/useTable";
-import MultiDialogProvider from "../../providers/MultiDialogProvider";
-import { emptyVenta } from "../../utils/empy-entities";
-import { useDataContext } from "../../providers/DataProvider";
+import { useFetch } from "../../hooks/useFetch";
+import { useSnackbar } from "../../hooks/useSnackbar";
 
 function HistorialDeVentas() {
-	const { data, loading, pagination, loadData, resetData } = useDataContext();
-	const { getVentas } = useFunctions();
+	const initialRequest = { path: "/ventas", params: { size: 5 } };
+	const [request, setRequest] = useState(initialRequest);
+	const [selected, setSelected] = useState(null);
+	const historialDeVentasDialog = useDialog({ open: false, view: "detalle" });
+	const feedback = useSnackbar({ open: false, message: "" });
+	const page = useFetch(request);
 
-	useEffect(() => {
-		loadData(getVentas);
-		return () => {
-			resetData();
-		};
-	}, [loadData, resetData]);
+	const filterData = (props) => {
+		const { search, categoriaId, ...pageParams } = request.params;
+		const filter = { ...pageParams };
+
+		!!props.search && (filter.search = props.search.toLowerCase().trim());
+		props.categoriaId !== "todas" && (filter.categoriaId = props.categoriaId);
+
+		setRequest({ path: request.path, params: filter });
+	};
+
+	const refreshPage = () => {
+		setRequest(initialRequest);
+	};
+
+	const handleSizeChange = ({ target }) => {
+		setRequest({ path: request.path, params: { ...request.params, page: 0, size: target.value } });
+	};
+
+	const handlePageChange = (event, newPage) => {
+		setRequest({ path: request.path, params: { ...request.params, page: newPage } });
+	};
+
+	const handleOpenDialog = (id, view = "detalle") => {
+		setSelected(id);
+		historialDeVentasDialog.open(view);
+	};
+
+	const handleFeedback = (message, refresh) => {
+		if (refresh) {
+			setRequest(initialRequest);
+			setSelected(null);
+		}
+		feedback.show(message);
+	};
 
 	return (
-		<MultiDialogProvider initialValue={emptyVenta}>
+		<React.Fragment>
 			<Typography variant="h3">Historial de ventas</Typography>
 			<Paper sx={{ width: "100%", position: "relative", borderRadius: 3 }} elevation={4}>
-				<HistorialDeVentasSearch />
+				<HistorialDeVentasSearch callback={filterData} />
 				<DataTable
 					headers={["Id", "Usuario", "Total de venta", "Eliminar"]}
-					loading={loading}
-					pagination={pagination}
+					loading={page.loading}
+					pagination={{
+						page: !!page.data ? page.data.page : 0,
+						size: !!page.data ? page.data.size : 5,
+						count: !!page.data ? page.data.count : 0,
+						sizeOptions: [5, 10, 20, 50, 100],
+						handleSize: handleSizeChange,
+						handlePage: handlePageChange
+					}}
 				>
-					{data.map((content, idx) => (
-						<HistorialDeVentasRow key={idx} {...content} />
-					))}
+					{!!page.data &&
+						page.data.content.map((item, idx) => (
+							<HistorialDeVentasRow
+								key={idx}
+								data={item}
+								openDialog={() => handleOpenDialog(item.id)}
+								onDelete={handleFeedback}
+							/>
+						))}
 				</DataTable>
 			</Paper>
-			<MultiDialog components={[HistorialDeVentasDetalle, null]} />
-		</MultiDialogProvider>
+			<HistorialDeVentasDialog
+				id={selected}
+				view={historialDeVentasDialog.data.view}
+				handleView={historialDeVentasDialog.handleView}
+				dialogProps={{ onClose: historialDeVentasDialog.close, open: historialDeVentasDialog.data.open }}
+			/>
+			<Snackbar
+				anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+				open={feedback.open}
+				onClose={feedback.onClose}
+				autoHideDuration={3000}
+				message={feedback.message}
+			/>
+		</React.Fragment>
 	);
 }
 

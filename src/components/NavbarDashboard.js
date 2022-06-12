@@ -1,15 +1,11 @@
 import { Settings } from "@mui/icons-material";
 import { Button, IconButton, Menu, MenuItem, Toolbar, Tooltip, Typography } from "@mui/material";
 import React from "react";
-import { useLocation, useNavigate } from "react-router-dom";
-import { useFunctions } from "../hooks/useFunctions";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../providers/AuthProvider";
-import { useMultiDialog } from "../providers/MultiDialogProvider";
 
-function NavbarDashboard() {
+function NavbarDashboard({ openDialog }) {
 	const [anchorElUser, setAnchorElUser] = React.useState(null);
-	const { openDialog, loadData } = useMultiDialog();
-	const { getUsuarioDetalle } = useFunctions();
 	const { signout, usuario } = useAuth();
 	const navigate = useNavigate();
 
@@ -25,18 +21,9 @@ function NavbarDashboard() {
 		await signout();
 	};
 
-	const handleShowDetalle = () => {
-		const { id } = usuario.data;
-		openDialog("detalle");
-		loadData(getUsuarioDetalle, id);
-	};
 	return (
 		<Toolbar disableGutters sx={{ justifyContent: "end", gap: 3 }}>
-			<Button
-				variant="outlined"
-				color="primary"
-				onClick={() => navigate("/", { replace: true })}
-			>
+			<Button variant="outlined" color="primary" onClick={() => navigate("/", { replace: true })}>
 				Ir a la tienda
 			</Button>
 			<Tooltip title="Abrir ajustes">
@@ -60,7 +47,7 @@ function NavbarDashboard() {
 				open={Boolean(anchorElUser)}
 				onClose={handleCloseUserMenu}
 			>
-				<MenuItem onClick={handleShowDetalle}>
+				<MenuItem onClick={openDialog}>
 					<Typography textAlign="center">Ver cuenta</Typography>
 				</MenuItem>
 				<MenuItem onClick={handleSignOut}>

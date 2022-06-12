@@ -1,62 +1,32 @@
-import { Add, Search } from "@mui/icons-material";
-import {
-	Button,
-	IconButton,
-	InputAdornment,
-	MenuItem,
-	TextField,
-	Toolbar,
-	Tooltip
-} from "@mui/material";
+import { Search } from "@mui/icons-material";
+import { IconButton, InputAdornment, MenuItem, TextField, Toolbar, Tooltip } from "@mui/material";
 import { Box } from "@mui/system";
+import axios from "axios";
 import { useFormik } from "formik";
-import React, { useCallback, useEffect, useState } from "react";
-import { useFunctions } from "../../hooks/useFunctions";
-import validator from "validator";
-import { useMultiDialog } from "../../providers/MultiDialogProvider";
+import { useEffect, useState } from "react";
+import { validateSearch } from "../../utils/helpers";
 
-function ProductoSearch({ disableAddButton = true }) {
+function ProductoSearch({ callback, disableGutters, children }) {
 	const [categorias, setCategorias] = useState([]);
-	const { openDialog, stopLoading } = useMultiDialog();
-	const { getCategorias } = useFunctions();
-	const { isAlphanumeric, isEmpty } = validator;
-
 	const { values, touched, errors, handleSubmit, handleChange } = useFormik({
-		initialValues: { search: "", categoria: "todas" },
-		validate: ({ search }) => {
-			const errors = {};
-			if (!isEmpty(search) && !isAlphanumeric(search, "es-ES", { ignore: " :" })) {
-				errors.search = "Introducir solo caracteres alfanuméricos";
-			}
-			return errors;
-		},
+		initialValues: { search: "", categoriaId: "todas" },
+		validate: (values) => validateSearch(values),
 		onSubmit: (values) => {
-			console.log(values);
+			callback(values);
 		}
 	});
 
-	const loadCategorias = useCallback(async () => {
-		try {
-			const result = await getCategorias({});
-			setCategorias(result.data);
-		} catch (error) {
-			console.log(error);
-		}
-	}, [setCategorias]);
-
 	useEffect(() => {
-		loadCategorias();
-	}, [loadCategorias]);
-
-	const handleOpenDialog = () => {
-		openDialog("agregar");
-		stopLoading();
-	};
+		const url = process.env.REACT_APP_API_URL + "/categorias";
+		axios.get(url, { params: { pagination: false } }).then(({ data }) => {
+			setCategorias(data);
+		});
+	}, []);
 
 	return (
 		<Toolbar
-			disableGutters
-			sx={{ py: 3, px: disableAddButton ? 0 : 3, gap: 3, alignItems: "start" }}
+			disableGutters={disableGutters}
+			sx={{ pb: 3, pt: 5, gap: 3, alignItems: "start" }}
 			component="form"
 			onSubmit={handleSubmit}
 		>
@@ -84,9 +54,9 @@ function ProductoSearch({ disableAddButton = true }) {
 				/>
 			</Box>
 			<TextField
-				name="categoria"
+				name="categoriaId"
 				label="Categoría"
-				value={values.categoria}
+				value={values.categoriaId}
 				onChange={handleChange}
 				select
 				sx={{ width: "200px" }}
@@ -98,23 +68,7 @@ function ProductoSearch({ disableAddButton = true }) {
 					</MenuItem>
 				))}
 			</TextField>
-			{!disableAddButton && (
-				<Tooltip title="Agregar Producto">
-					<Button
-						variant="contained"
-						sx={{
-							borderRadius: 100,
-							height: "55.97px",
-							minWidth: "0px",
-							width: "55.97px",
-							p: 0
-						}}
-						onClick={handleOpenDialog}
-					>
-						<Add />
-					</Button>
-				</Tooltip>
-			)}
+			{children}
 		</Toolbar>
 	);
 }

@@ -1,57 +1,37 @@
-import { useCallback, useState } from "react";
+import axios from "axios";
 
-export function useData(props = { paged: false }) {
-	const [data, setData] = useState([]);
-	const [page, setPage] = useState(0);
-	const [rowsPerPage, setRowsPerPage] = useState(5);
-	const [loading, setLoading] = useState(true);
+const { useState, useEffect, useRef } = require("react");
 
-	const resetData = useCallback(() => {
-		setData([]);
+export const useData = ({ path, id, emptyData }) => {
+	const [data, setData] = useState(emptyData);
+	const [error, setError] = useState(null);
+	const [loading, setLoading] = useState(false);
+
+	useEffect(() => {
 		setLoading(true);
-		setPage(0);
-		setRowsPerPage(5);
-	}, [setData, setLoading, setPage, setRowsPerPage]);
-
-	const loadData = useCallback(
-		async (callback, props = {}) => {
-			resetData();
-			try {
-				const result = await callback(props);
-				setData(result.data);
-			} catch (error) {
-				console.log(error);
-			}
+		setData(emptyData);
+		if (!!id) {
+			axios
+				.get(process.env.REACT_APP_API_URL + path + "/" + id)
+				.then((response) => {
+					setData(response.data);
+					setError(null);
+				})
+				.catch(({ response }) => {
+					setError(response.data);
+					setData(null);
+				})
+				.finally(() => {
+					setTimeout(() => {
+						setLoading(false);
+					}, 500);
+				});
+		} else {
 			setTimeout(() => {
 				setLoading(false);
 			}, 500);
-		},
-		[setLoading, setData, resetData]
-	);
-
-	const handleChangePage = (event, newPage) => {
-		setPage(newPage);
-	};
-
-	const handleChangeRowsPerPage = ({ target }) => {
-		setRowsPerPage(parseInt(target.value, 10));
-		setPage(0);
-	};
-
-	return {
-		data: props.paged ? data.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage) : data,
-		setData,
-		loading,
-		loadData,
-		resetData,
-		setLoading,
-		pagination: {
-			rowsPerPageOptions: [5, 10, 25],
-			count: data.length,
-			rowsPerPage,
-			page,
-			handleChangePage,
-			handleChangeRowsPerPage
 		}
-	};
-}
+	}, [path, id]);
+
+	return { data, error, loading };
+};

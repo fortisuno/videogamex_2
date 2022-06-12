@@ -5,11 +5,17 @@ import React from "react";
 function IconButtonCell({ text, disabled, callback }) {
 	return (
 		<TableCell sx={{ textAlign: "center" }}>
-			<Tooltip title={"Eliminar " + text}>
-				<IconButton color="error" disabled={disabled} onClick={callback}>
+			{disabled ? (
+				<IconButton color="error" disabled onClick={callback}>
 					<Delete />
 				</IconButton>
-			</Tooltip>
+			) : (
+				<Tooltip title={"Eliminar " + text}>
+					<IconButton color="error" onClick={callback}>
+						<Delete />
+					</IconButton>
+				</Tooltip>
+			)}
 		</TableCell>
 	);
 }
